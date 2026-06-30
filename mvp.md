@@ -10,9 +10,9 @@
 ## ÉTAT ACTUEL  ← (mis à jour par l'agent à chaque tâche terminée)
 
 ```
-Phase en cours    : P3 — Qualification LLM
-Dernière tâche OK : P3-T6
-Prochaine tâche   : P4-T1
+Phase en cours    : P4 — Alertes & récap quotidien
+Dernière tâche OK : P4-T4
+Prochaine tâche   : P5-T1
 Bloqueurs         : P0-T3 bloquée — migration à relancer avec `pnpm db:migrate` quand Docker tourne. P1-T1 manuelle — acheter numéro Twilio +32 et configurer le webhook URL
 Mis à jour le     : 2026-06-30
 ```
@@ -95,10 +95,10 @@ Mis à jour le     : 2026-06-30
 
 **But :** le patron est prévenu, et voit le ROI.
 
-- ☐ **P4-T1** Alerte instantanée au patron (SMS et/ou email) à chaque `Lead` qualifié.
-- ☐ **P4-T2** Job cron quotidien (worker) : email récap par client.
-- ☐ **P4-T3** Contenu récap : appels captés du jour, leads, en attente de rappel.
-- ☐ **P4-T4** Compteur mensuel ROI dans l'email : « X appels captés, Y leads ce mois ».
+- ☑ **P4-T1** Alerte instantanée au patron (SMS et/ou email) à chaque `Lead` qualifié.
+- ☑ **P4-T2** Job cron quotidien (worker) : email récap par client.
+- ☑ **P4-T3** Contenu récap : appels captés du jour, leads, en attente de rappel.
+- ☑ **P4-T4** Compteur mensuel ROI dans l'email : « X appels captés, Y leads ce mois ».
 
 **Acceptation :** chaque soir, chaque client actif reçoit un récap exact ; chaque lead génère une alerte.
 **Hors-scope :** UI web.

@@ -1,4 +1,46 @@
-// P4-T2 : rempli en Phase 4
+import "dotenv/config";
+import { db } from "../../src/lib/db";
+import { buildClientRecap } from "../../src/lib/recap/service";
+import { buildDailyRecapEmail } from "../../src/lib/email/templates";
+import { getResendClient, FROM_EMAIL } from "../../src/lib/email/client";
+import { logger } from "../../src/lib/logger";
+
 export async function runDailyRecap(): Promise<void> {
-  // TODO(P4-T2): générer et envoyer le récap quotidien par client
+  const now = new Date();
+  logger.info({ now: now.toISOString() }, "Récap quotidien démarré");
+
+  // Envoyer un récap uniquement aux clients actifs
+  const clients = await db.client.findMany({
+    where: { stage: "active" },
+    select: { id: true },
+  });
+
+  let sent = 0;
+  let errors = 0;
+
+  for (const { id: clientId } of clients) {
+    try {
+      const payload = await buildClientRecap(clientId, now);
+      if (!payload) continue;
+
+      const { subject, html } = buildDailyRecapEmail(payload.data);
+
+      const { error } = await getResendClient().emails.send({
+        from: FROM_EMAIL,
+        to: payload.ownerEmails,
+        subject,
+        html,
+      });
+
+      if (error) throw new Error(error.message);
+
+      logger.info({ clientId }, "Récap envoyé");
+      sent++;
+    } catch (err) {
+      logger.error({ err, clientId }, "Erreur récap quotidien pour ce client");
+      errors++;
+    }
+  }
+
+  logger.info({ sent, errors, total: clients.length }, "Récap quotidien terminé");
 }

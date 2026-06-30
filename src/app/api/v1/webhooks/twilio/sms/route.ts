@@ -8,6 +8,7 @@ import {
 } from "@/lib/conversations/service";
 import { qualifyMessage } from "@/lib/llm/qualification";
 import { upsertLead } from "@/lib/leads/service";
+import { sendLeadAlert } from "@/lib/alerts/service";
 import { sendSms } from "@/lib/sms/service";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
@@ -99,6 +100,19 @@ export async function POST(req: NextRequest) {
         : ConversationState.qualified;
 
       await updateConversationState(conversation.id, nextState);
+
+      // P4-T1 : alerte email instantanée au patron
+      sendLeadAlert(clientId, {
+        callerNumber,
+        type: result.qualification.type,
+        urgency: result.qualification.urgency,
+        location: result.qualification.location,
+        availability: result.qualification.availability,
+        summary: result.qualification.summary,
+        needs_human: result.needs_human,
+      }).catch((err) =>
+        logger.error({ err, conversationId: conversation.id }, "Erreur alerte lead")
+      );
     }
 
     // ── Envoyer la réponse SMS + enregistrer l'outbound ──────────────
