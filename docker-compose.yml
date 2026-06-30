@@ -48,6 +48,18 @@ services:
       db:
         condition: service_healthy
 
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    command: pnpm exec prisma migrate deploy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-btpreply}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-btpreply}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
