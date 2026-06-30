@@ -11,8 +11,8 @@
 
 ```
 Phase en cours    : P0 — Fondations
-Dernière tâche OK : P0-T6
-Prochaine tâche   : P0-T3 (migration) puis P0-T7
+Dernière tâche OK : P0-T8
+Prochaine tâche   : P0-T3 (migration, bloquée Docker) puis P1-T1
 Bloqueurs         : P0-T3 bloquée — migration à relancer avec `pnpm db:migrate` quand Docker tourne
 Mis à jour le     : 2026-06-30
 ```
@@ -37,8 +37,8 @@ Mis à jour le     : 2026-06-30
 - ☑ **P0-T4** Worker séparé (`/worker`) avec un cron vide qui démarre.
 - ☑ **P0-T5** Dockeriser (`app` + `worker`) + Docker Compose + Caddy.
 - ☑ **P0-T6** Pipeline GitHub Actions (lint + test + build) + déploiement VPS Hetzner EU.
-- ☐ **P0-T7** Seed : un `Client` de test + un `User` admin + un `PhoneNumber` factice.
-- ☐ **P0-T8** Établir la convention **API v1** (REST/JSON versionné sous `/api/v1`, auth par jeton) que le dashboard ET la future app mobile consommeront. Voir `techStack.md §8.5`.
+- ☑ **P0-T7** Seed : un `Client` de test + un `User` admin + un `PhoneNumber` factice.
+- ☑ **P0-T8** Établir la convention **API v1** (REST/JSON versionné sous `/api/v1`, auth par jeton) que le dashboard ET la future app mobile consommeront. Voir `techStack.md §8.5`.
 
 **Acceptation :** l'app et le worker tournent en local et sur le VPS ; la base contient le tenant de test ; CI verte.
 **Hors-scope :** toute logique métier.
