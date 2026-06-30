@@ -1,9 +1,11 @@
 packages:
   - '.'
 
-onlyBuiltDependencies:
-  - '@prisma/engines'
-  - '@sentry/cli'
-  - esbuild
-  - prisma
-  - bcryptjs
+allowBuilds:
+  '@prisma/engines': true
+  '@sentry/cli': true
+  esbuild: true
+  prisma: true
+  bcryptjs: true
+  sharp: false
+  unrs-resolver: false
