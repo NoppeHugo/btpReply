@@ -25,6 +25,9 @@ export default async function DashboardLayout({
           {isAdmin && (
             <NavLink href="/dashboard/clients" label="👥 Clients" />
           )}
+          {isAdmin && (
+            <NavLink href="/dashboard/admin/checklist" label="🚀 Go-live" />
+          )}
           <NavLink href="/dashboard/calls" label="📞 Appels" />
           <NavLink href="/dashboard/leads" label="✅ Leads" />
           <NavLink href="/dashboard/roi" label="📊 ROI" />
