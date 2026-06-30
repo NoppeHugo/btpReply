@@ -19,16 +19,12 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
+      # Forcer l'hôte de la DB sur le service `db` (le .env peut contenir une autre valeur)
       DATABASE_URL: postgresql://${POSTGRES_USER:-btpreply}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-btpreply}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       ANTHROPIC_MODEL_QUALIFICATION: ${ANTHROPIC_MODEL_QUALIFICATION:-claude-haiku-4-5}
-      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
-      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
-      TWILIO_WEBHOOK_SIGNING_KEY: ${TWILIO_WEBHOOK_SIGNING_KEY}
-      RESEND_API_KEY: ${RESEND_API_KEY}
-      APP_BASE_URL: ${APP_BASE_URL}
-      SENTRY_DSN: ${SENTRY_DSN}
     depends_on:
       db:
         condition: service_healthy
@@ -38,12 +34,10 @@ services:
       context: .
       dockerfile: Dockerfile.worker
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-btpreply}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-btpreply}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
-      RESEND_API_KEY: ${RESEND_API_KEY}
-      APP_BASE_URL: ${APP_BASE_URL}
-      SENTRY_DSN: ${SENTRY_DSN}
     depends_on:
       db:
         condition: service_healthy
