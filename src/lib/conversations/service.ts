@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
-import { MessageDirection } from "@/generated/prisma/client";
+import { ConversationState, MessageDirection } from "@/generated/prisma/client";
+import type { ConversationMessage } from "@/lib/llm/qualification";
 
 interface GetOrCreateConversationParams {
   clientId: string;
@@ -8,10 +9,6 @@ interface GetOrCreateConversationParams {
   callerNumber: string;
 }
 
-/**
- * Retrouve ou crée la Conversation liée à un appel.
- * P2-T4 : une Conversation par appel (1-to-1 via callId).
- */
 export async function getOrCreateConversation(
   params: GetOrCreateConversationParams
 ): Promise<string> {
@@ -55,7 +52,6 @@ export async function recordMessage(params: RecordMessageParams): Promise<string
     select: { id: true },
   });
 
-  // Incrémenter le compteur de tours
   await db.conversation.update({
     where: { id: params.conversationId },
     data: { turnCount: { increment: 1 }, updatedAt: new Date() },
@@ -66,7 +62,6 @@ export async function recordMessage(params: RecordMessageParams): Promise<string
 
 /**
  * P2-T5 : retrouve une Conversation ouverte par numéro appelant + client.
- * Utilisé quand un SMS entrant arrive sans CallId connu.
  */
 export async function findOpenConversationByCallerNumber(
   clientId: string,
@@ -81,4 +76,71 @@ export async function findOpenConversationByCallerNumber(
     orderBy: { createdAt: "desc" },
     select: { id: true, callId: true, turnCount: true },
   });
+}
+
+interface ConversationWithMessages {
+  clientName: string;
+  callerNumber: string;
+  fromNumber: string;
+  messages: ConversationMessage[];
+}
+
+/**
+ * P3-T3 : charge la conversation + ses messages formatés pour le LLM.
+ * Skips le tout premier message outbound (SMS d'accueil) pour satisfaire
+ * la contrainte de l'API Anthropic (premier rôle = "user").
+ */
+export async function getConversationForLLM(
+  conversationId: string,
+  clientId: string
+): Promise<ConversationWithMessages | null> {
+  const row = await db.conversation.findUnique({
+    where: { id: conversationId, clientId },
+    select: {
+      callerNumber: true,
+      client: { select: { name: true } },
+      call: {
+        select: {
+          phoneNumber: { select: { number: true } },
+        },
+      },
+      messages: {
+        select: { direction: true, body: true },
+        orderBy: { sentAt: "asc" },
+      },
+    },
+  });
+
+  if (!row) return null;
+
+  // Drop leading outbound messages so the first LLM turn is "user"
+  const rawMessages = row.messages;
+  const firstInboundIdx = rawMessages.findIndex((m) => m.direction === MessageDirection.inbound);
+  if (firstInboundIdx === -1) return null;
+
+  const messages: ConversationMessage[] = rawMessages.slice(firstInboundIdx).map((m) => ({
+    role: m.direction === MessageDirection.inbound ? "user" : "assistant",
+    content: m.body,
+  }));
+
+  return {
+    clientName: row.client.name,
+    callerNumber: row.callerNumber,
+    fromNumber: row.call.phoneNumber.number,
+    messages,
+  };
+}
+
+/**
+ * P3-T3 / P3-T5 : met à jour l'état de la conversation.
+ */
+export async function updateConversationState(
+  conversationId: string,
+  state: ConversationState
+): Promise<void> {
+  await db.conversation.update({
+    where: { id: conversationId },
+    data: { state },
+  });
+  logger.info({ conversationId, state }, "État conversation mis à jour");
 }

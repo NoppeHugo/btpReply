@@ -10,9 +10,9 @@
 ## ÉTAT ACTUEL  ← (mis à jour par l'agent à chaque tâche terminée)
 
 ```
-Phase en cours    : P0 — Fondations
-Dernière tâche OK : P2-T5
-Prochaine tâche   : P3-T1
+Phase en cours    : P3 — Qualification LLM
+Dernière tâche OK : P3-T6
+Prochaine tâche   : P4-T1
 Bloqueurs         : P0-T3 bloquée — migration à relancer avec `pnpm db:migrate` quand Docker tourne. P1-T1 manuelle — acheter numéro Twilio +32 et configurer le webhook URL
 Mis à jour le     : 2026-06-30
 ```
@@ -79,12 +79,12 @@ Mis à jour le     : 2026-06-30
 
 **But :** comprendre le besoin et savoir quand passer la main.
 
-- ☐ **P3-T1** Client LLM (Claude Haiku 4.5) + system prompt + prompt caching.
-- ☐ **P3-T2** Implémenter le **contrat de sortie JSON** de `techStack.md §5` (tool use / sortie structurée).
-- ☐ **P3-T3** Boucle de conversation : réponse → `reply` renvoyé par SMS, qualif mise à jour.
-- ☐ **P3-T4** Détection de complétude (`complete=true`) → créer/MAJ un `Lead`.
-- ☐ **P3-T5** Handoff : `needs_human=true` ou > 6 tours → « je transmets, on vous rappelle » + flag.
-- ☐ **P3-T6** Garde-fou anti-hors-sujet / spam.
+- ☑ **P3-T1** Client LLM (Claude Haiku 4.5) + system prompt + prompt caching.
+- ☑ **P3-T2** Implémenter le **contrat de sortie JSON** de `techStack.md §5` (tool use / sortie structurée).
+- ☑ **P3-T3** Boucle de conversation : réponse → `reply` renvoyé par SMS, qualif mise à jour.
+- ☑ **P3-T4** Détection de complétude (`complete=true`) → créer/MAJ un `Lead`.
+- ☑ **P3-T5** Handoff : `needs_human=true` ou > 6 tours → « je transmets, on vous rappelle » + flag.
+- ☑ **P3-T6** Garde-fou anti-hors-sujet / spam.
 
 **Acceptation :** une conversation typique produit un `Lead` qualifié (type, urgence, lieu, dispo, résumé) ; un cas tordu déclenche le handoff sans dire de bêtise.
 **Hors-scope :** alertes, dashboard.
