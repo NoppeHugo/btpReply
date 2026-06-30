@@ -1,15 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Mock db avant l'import du service
 vi.mock("@/lib/db", () => ({
   db: {
     phoneNumber: { findUnique: vi.fn() },
     call: { create: vi.fn() },
   },
 }));
-
-vi.mock("@/lib/logger", () => ({
-  logger: { info: vi.fn(), warn: vi.fn() },
+vi.mock("@/lib/logger", () => ({ logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() } }));
+vi.mock("@/lib/sms/service", () => ({
+  buildInitialSmsBody: vi.fn(),
+  sendSms: vi.fn(),
+}));
+vi.mock("@/lib/conversations/service", () => ({
+  getOrCreateConversation: vi.fn(),
+  recordMessage: vi.fn(),
 }));
 
 import { handleIncomingCall } from "./service";
@@ -31,25 +35,15 @@ describe("handleIncomingCall", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("crée un Call et retourne callId + clientId quand le numéro est connu", async () => {
-    mockDb.phoneNumber.findUnique.mockResolvedValue({
-      id: "phone-01",
-      clientId: "client-01",
-    });
-    mockDb.call.create.mockResolvedValue({
-      id: "call-01",
-      clientId: "client-01",
-    });
+    mockDb.phoneNumber.findUnique.mockResolvedValue({ id: "phone-01", clientId: "client-01" });
+    mockDb.call.create.mockResolvedValue({ id: "call-01", clientId: "client-01" });
 
     const result = await handleIncomingCall(BASE_PARAMS);
 
-    expect(result).toEqual({ callId: "call-01", clientId: "client-01" });
+    expect(result).toEqual({ callId: "call-01", clientId: "client-01", fromNumber: "+32499000001" });
     expect(mockDb.call.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({
-          twilioCallSid: "CA123",
-          callerNumber: "+32477000001",
-          clientId: "client-01",
-        }),
+        data: expect.objectContaining({ twilioCallSid: "CA123", callerNumber: "+32477000001" }),
       })
     );
   });

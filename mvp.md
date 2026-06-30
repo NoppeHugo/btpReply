@@ -11,8 +11,8 @@
 
 ```
 Phase en cours    : P0 — Fondations
-Dernière tâche OK : P1-T5
-Prochaine tâche   : P2-T1
+Dernière tâche OK : P2-T5
+Prochaine tâche   : P3-T1
 Bloqueurs         : P0-T3 bloquée — migration à relancer avec `pnpm db:migrate` quand Docker tourne. P1-T1 manuelle — acheter numéro Twilio +32 et configurer le webhook URL
 Mis à jour le     : 2026-06-30
 ```
@@ -64,11 +64,11 @@ Mis à jour le     : 2026-06-30
 
 **But :** envoyer le premier SMS et maintenir le fil.
 
-- ☐ **P2-T1** Service d'envoi SMS (Twilio Messaging) avec nom de boîte + mention STOP.
-- ☐ **P2-T2** Déclencher le SMS auto après un `Call` manqué (délai configurable, défaut 30 s).
-- ☐ **P2-T3** Endpoint webhook SMS entrant (vérif. signature).
-- ☐ **P2-T4** Créer/retrouver une `Conversation` par appelant + enregistrer chaque `Message`.
-- ☐ **P2-T5** Gérer plusieurs SMS d'affilée du même appelant (regroupement).
+- ☑ **P2-T1** Service d'envoi SMS (Twilio Messaging) avec nom de boîte + mention STOP.
+- ☑ **P2-T2** Déclencher le SMS auto après un `Call` manqué (délai configurable, défaut 30 s).
+- ☑ **P2-T3** Endpoint webhook SMS entrant (vérif. signature).
+- ☑ **P2-T4** Créer/retrouver une `Conversation` par appelant + enregistrer chaque `Message`.
+- ☑ **P2-T5** Gérer plusieurs SMS d'affilée du même appelant (regroupement).
 
 **Acceptation :** appel manqué → SMS reçu par le client → sa réponse est stockée dans la bonne `Conversation`.
 **Hors-scope :** intelligence de la réponse (phase 3).

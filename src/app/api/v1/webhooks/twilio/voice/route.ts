@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { twiml } from "twilio";
 import { validateTwilioSignature } from "@/lib/twilio/signature";
-import { handleIncomingCall } from "@/lib/calls/service";
+import { handleIncomingCall, scheduleInitialSms } from "@/lib/calls/service";
 import { logger } from "@/lib/logger";
 
 export async function POST(req: NextRequest) {
@@ -22,13 +22,22 @@ export async function POST(req: NextRequest) {
   const callerNumber = params["From"] ?? "";
   const toNumber = params["To"] ?? "";
 
-  // --- Création du Call (P1-T3, P1-T4, P1-T5) ---
-  await handleIncomingCall({
+  // --- Création du Call + SMS différé (P1-T3/T4/T5, P2-T2) ---
+  const callResult = await handleIncomingCall({
     twilioCallSid,
     callerNumber,
     toNumber,
     calledAt: new Date(),
   });
+
+  if (callResult) {
+    scheduleInitialSms(
+      callResult.callId,
+      callResult.clientId,
+      callerNumber,
+      callResult.fromNumber
+    );
+  }
 
   // --- Réponse TwiML : message bref + raccrochage ---
   const response = new twiml.VoiceResponse();
