@@ -6,8 +6,6 @@ import { authConfig } from "@/auth.config";
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   ...authConfig,
-  // Derrière un reverse proxy / tunnel : NextAuth doit faire confiance au Host.
-  trustHost: true,
   session: { strategy: "jwt" },
   providers: [
     Credentials({
