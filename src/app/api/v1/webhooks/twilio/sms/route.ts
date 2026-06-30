@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     // Fermer toute conversation ouverte pour ce numéro
     const openConv = await findOpenConversationByCallerNumber(clientId, callerNumber);
     if (openConv) {
-      await updateConversationState(openConv.id, ConversationState.closed);
+      await updateConversationState(openConv.id, ConversationState.closed, clientId);
     }
 
     // Confirmer l'opt-out
@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
 
   // ── P5-T5 : détection de langue sur le message entrant ───────────────
   const detectedLang = detectLanguage(messageBody);
-  await updateConversationLanguage(conversation.id, detectedLang);
+  await updateConversationLanguage(conversation.id, detectedLang, clientId);
 
   logger.info(
     { conversationId: conversation.id, clientId, callerNumber, lang: detectedLang },
@@ -134,7 +134,7 @@ export async function POST(req: NextRequest) {
         ? ConversationState.handed_off
         : ConversationState.qualified;
 
-      await updateConversationState(conversation.id, nextState);
+      await updateConversationState(conversation.id, nextState, clientId);
 
       // P4-T1 : alerte email instantanée au patron
       sendLeadAlert(clientId, {

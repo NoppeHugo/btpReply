@@ -10,9 +10,9 @@
 ## ÉTAT ACTUEL  ← (mis à jour par l'agent à chaque tâche terminée)
 
 ```
-Phase en cours    : P6 — Dashboard admin & gestion client ✅
-Dernière tâche OK : P6-T10
-Prochaine tâche   : P7-T1
+Phase en cours    : P7 — Multi-tenant, onboarding & facturation ✅
+Dernière tâche OK : P7-T4
+Prochaine tâche   : P8-T1
 Bloqueurs         : P0-T3 bloquée — migration à relancer avec `pnpm db:migrate` quand Docker tourne. P1-T1 manuelle — acheter numéro Twilio +32 et configurer le webhook URL
 Mis à jour le     : 2026-06-30
 ```
@@ -142,10 +142,10 @@ Mis à jour le     : 2026-06-30
 
 ## Phase 7 — Multi-tenant, onboarding & facturation
 
-- ☐ **P7-T1** Durcir l'isolation multi-tenant (revue de toutes les requêtes scopées `clientId`).
-- ☐ **P7-T2** Onboarding d'un nouveau client (provisioning numéro + config guidée).
-- ☐ **P7-T3** Plans & facturation : base + numéro supplémentaire (+39 €) ; hook Stripe.
-- ☐ **P7-T4** Politique de rétention/purge RGPD (ex. 12 mois).
+- ☑ **P7-T1** Durcir l'isolation multi-tenant (revue de toutes les requêtes scopées `clientId`).
+- ☑ **P7-T2** Onboarding d'un nouveau client (provisioning numéro + config guidée).
+- ☑ **P7-T3** Plans & facturation : base + numéro supplémentaire (+39 €) ; hook Stripe.
+- ☑ **P7-T4** Politique de rétention/purge RGPD (ex. 12 mois).
 
 ---
 

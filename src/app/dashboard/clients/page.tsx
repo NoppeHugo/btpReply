@@ -31,9 +31,17 @@ export default async function ClientsPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-xl font-semibold text-gray-900">
-        Clients ({clients.length})
-      </h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-xl font-semibold text-gray-900">
+          Clients ({clients.length})
+        </h1>
+        <Link
+          href="/dashboard/clients/new"
+          className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+        >
+          + Nouveau client
+        </Link>
+      </div>
 
       {clients.length === 0 ? (
         <p className="text-sm text-gray-500">Aucun client pour l'instant.</p>
