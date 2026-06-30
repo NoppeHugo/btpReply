@@ -1,0 +1,69 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-btpreply}
+      POSTGRES_USER: ${POSTGRES_USER:-btpreply}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-btpreply}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-btpreply}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-btpreply}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      ANTHROPIC_MODEL_QUALIFICATION: ${ANTHROPIC_MODEL_QUALIFICATION:-claude-haiku-4-5}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
+      TWILIO_WEBHOOK_SIGNING_KEY: ${TWILIO_WEBHOOK_SIGNING_KEY}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      APP_BASE_URL: ${APP_BASE_URL}
+      SENTRY_DSN: ${SENTRY_DSN}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-btpreply}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-btpreply}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      APP_BASE_URL: ${APP_BASE_URL}
+      SENTRY_DSN: ${SENTRY_DSN}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:
