@@ -46,9 +46,6 @@
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
-  "pnpm": {
-    "onlyBuiltDependencies": ["@sentry/cli", "bcrypt", "prisma"]
-  },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^3.0.0",
