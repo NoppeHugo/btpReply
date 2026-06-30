@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
+import Link from "next/link";
 
 const STATE_LABEL: Record<string, string> = {
   open: "En cours",
@@ -59,6 +60,7 @@ export default async function CallsPage() {
                 <th className="px-4 py-3">Type</th>
                 <th className="px-4 py-3">Urgence</th>
                 <th className="px-4 py-3">Statut lead</th>
+                <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -102,6 +104,16 @@ export default async function CallsPage() {
                       )}
                     </td>
                     <td className="px-4 py-3 text-gray-600">{lead?.status ?? "—"}</td>
+                    <td className="px-4 py-3">
+                      {call.conversation && (
+                        <Link
+                          href={`/dashboard/conversations/${call.conversation.id}`}
+                          className="text-xs text-blue-600 hover:underline"
+                        >
+                          Voir →
+                        </Link>
+                      )}
+                    </td>
                   </tr>
                 );
               })}

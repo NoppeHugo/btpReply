@@ -10,9 +10,9 @@
 ## ÉTAT ACTUEL  ← (mis à jour par l'agent à chaque tâche terminée)
 
 ```
-Phase en cours    : P6 — Dashboard admin & gestion client (P6-T10 restante)
-Dernière tâche OK : P6-T9
-Prochaine tâche   : P6-T10
+Phase en cours    : P6 — Dashboard admin & gestion client ✅
+Dernière tâche OK : P6-T10
+Prochaine tâche   : P7-T1
 Bloqueurs         : P0-T3 bloquée — migration à relancer avec `pnpm db:migrate` quand Docker tourne. P1-T1 manuelle — acheter numéro Twilio +32 et configurer le webhook URL
 Mis à jour le     : 2026-06-30
 ```
@@ -134,7 +134,7 @@ Mis à jour le     : 2026-06-30
 - ☑ **P6-T7** Renommage d'un client (`displayName`).
 - ☑ **P6-T8** Notes internes par client (`ClientNote`).
 - ☑ **P6-T9** Envoi d'un message à un client (artisan) — SMS/email — journalisé (`ClientMessage`).
-- ☐ **P6-T10** Vue conversation : fil de messages SMS par appel (`GET /api/v1/conversations/[id]/messages` + page `/dashboard/conversations/[id]` style chat, accessible depuis la liste des appels).
+- ☑ **P6-T10** Vue conversation : fil de messages SMS par appel (`GET /api/v1/conversations/[id]/messages` + page `/dashboard/conversations/[id]` style chat, accessible depuis la liste des appels).
 
 > Toutes les actions P6-T5 → P6-T9 passent par `/api/v1` (compatibles app mobile dès le départ).
 
