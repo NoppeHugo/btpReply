@@ -16,7 +16,8 @@ ask()     { echo -e "${YELLOW}  → $1${NC}"; read -r -p "    Valeur : " _val; e
 
 APP_DIR="/opt/btpreply"
 CADDYFILE="/home/hugo/ccm/Caddyfile"
-APP_DOMAIN="app.btpreply.be"
+APP_DOMAIN="btpreply.collierscolliersmaison.be"
+TLS_EMAIL="admin@collierscolliersmaison.be"
 CADDY_CONTAINER="ccm-caddy-1"
 CCM_NETWORK="ccm_internal"
 
@@ -129,17 +130,17 @@ success "docker-compose.override.yml créé"
 # ── 3. Caddyfile — ajout de app.btpreply.be ───────────────────────────────────
 step "Caddyfile"
 
-if grep -q "app.btpreply.be" "$CADDYFILE"; then
-  success "app.btpreply.be déjà dans le Caddyfile"
+if grep -q "$APP_DOMAIN" "$CADDYFILE"; then
+  success "$APP_DOMAIN déjà dans le Caddyfile"
 else
-  cat >> "$CADDYFILE" <<'EOF'
+  cat >> "$CADDYFILE" <<EOF
 
-app.btpreply.be {
-  tls admin@btpreply.be
+${APP_DOMAIN} {
+  tls ${TLS_EMAIL}
   reverse_proxy btpreply-app-1:3000
 }
 EOF
-  success "app.btpreply.be ajouté au Caddyfile"
+  success "$APP_DOMAIN ajouté au Caddyfile"
 fi
 
 # ── 4. Build ──────────────────────────────────────────────────────────────────
