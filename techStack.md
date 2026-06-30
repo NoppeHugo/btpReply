@@ -47,7 +47,7 @@ Le **worker** et l'**app** partagent le même code (monorepo simple, pas de pack
 | Élément | Choix | Pourquoi |
 |---|---|---|
 | SGBD | **PostgreSQL 16** | Le choix ennuyeux et correct ; transactionnel, multi-tenant facile. |
-| Hébergement | **Supabase (région EU — Frankfurt)** en MVP ; Postgres self-hosted sur le VPS en option | Managé + RGPD ; **la région DOIT être en UE**. |
+| Hébergement | **VPS Heltzner ou OVH** en MVP ; Postgres self-hosted sur le VPS en option | Managé + RGPD ; **la région DOIT être en UE**. |
 | ORM | **Prisma** | `schema.prisma` = contrat unique qui contraint fortement les agents ; types générés. |
 
 **Multi-tenant (règle dure) :** chaque table métier porte une colonne `clientId`. **Toute** requête doit être scopée par `clientId`. Aucune requête cross-tenant n'est autorisée hors du module d'admin interne.
@@ -145,7 +145,7 @@ Ne PAS introduire Redis/BullMQ tant que le cron simple suffit. Pas de sur-ingén
 
 | Élément | Choix |
 |---|---|
-| Auth | **Supabase Auth** (ou **Auth.js** si Postgres self-hosted) |
+| Auth | **Auth.js** si Postgres self-hosted |
 | Accès MVP | Admin interne (vous) + vue propriétaire en lecture pour le client |
 
 ---
@@ -221,3 +221,6 @@ Chaque décision technique structurante est consignée ici, datée. Format : `AA
 - **2026-06-29 — Haiku 4.5 pour la qualification.** Raison : coût/latence ; Sonnet réservé aux cas justifiés.
 - **2026-06-29 — VPS Hetzner EU + Docker.** Raison : coût, process longs, résidence des données UE.
 - **2026-06-29 — Architecture API-first (REST `/api/v1`, auth par jeton).** Raison : le dashboard web et la future app mobile consomment la même API ; logique dans `/lib`.
+- **2026-06-30 — Prisma 7 : driver adapter obligatoire (`@prisma/adapter-pg` + `pg`).** Raison : Prisma 7 a supprimé la connexion directe par URL dans PrismaClient ; singleton dans `src/lib/db.ts`.
+- **2026-06-30 — Auth API v1 P0 par token statique (`API_SECRET_KEY`), remplacé par JWT en P6-T1.** Raison : pas de sur-ingénierie en P0 ; le contrat bearer est posé dès maintenant pour la compatibilité mobile.
+- **2026-06-30 — Postgres self-hosted sur VPS Hetzner plutôt que Supabase.** Raison : choix utilisateur ; réduit les coûts et garde toutes les données sur le VPS. Docker Compose gère Postgres en local (dev) et en prod.
