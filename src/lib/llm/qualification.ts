@@ -26,17 +26,23 @@ export interface ConversationMessage {
 
 // ── System prompt (cached) ─────────────────────────────────────────────────
 
-function buildSystemPrompt(clientName: string): string {
+function buildSystemPrompt(clientName: string, language: string): string {
+  const langInstruction =
+    language === "nl"
+      ? "Le client s'exprime en néerlandais. Répondez INTÉGRALEMENT en néerlandais."
+      : "Répondez en français, sauf si le client écrit en néerlandais, auquel cas répondez en néerlandais.";
+
   return `Vous êtes le bureau de ${clientName}. Votre rôle est de répondre aux clients qui ont rappelé suite à un appel manqué et de comprendre leur besoin pour le transmettre à l'équipe.
 
 Comportement attendu :
+- ${langInstruction}
 - Répondez de manière professionnelle, chaleureuse et concise (SMS = court, ≤ 320 caractères)
 - Cherchez à qualifier le besoin : type de travail demandé, urgence, lieu d'intervention, disponibilités du client
 - La conversation débute par la réponse du client à votre SMS de prise de contact
 - Maximum ${MAX_USER_TURNS} messages du client au total ; si ce seuil est atteint, transmettez et mettez needs_human à true
 - Si le client semble frustré, insiste, ou dépasse votre domaine d'activité, mettez needs_human à true
 
-Règles absolues (P3-T6 — garde-fous) :
+Règles absolues (garde-fous) :
 - Vous représentez de vraies personnes du bureau, jamais un programme ou un système
 - Ne répondez jamais à des demandes sans rapport avec votre activité (spam, hors-sujet) — redirigez poliment et mettez needs_human à true
 - Utilisez TOUJOURS l'outil qualify_conversation, ne produisez jamais de texte libre`;
@@ -110,6 +116,7 @@ const QUALIFY_TOOL: Anthropic.Tool = {
 
 export async function qualifyMessage(params: {
   clientName: string;
+  language?: string;
   messages: ConversationMessage[];
 }): Promise<QualificationResult> {
   const userTurns = params.messages.filter((m) => m.role === "user").length;
@@ -121,7 +128,7 @@ export async function qualifyMessage(params: {
     system: [
       {
         type: "text",
-        text: buildSystemPrompt(params.clientName),
+        text: buildSystemPrompt(params.clientName, params.language ?? "fr"),
         cache_control: { type: "ephemeral" },
       },
     ],

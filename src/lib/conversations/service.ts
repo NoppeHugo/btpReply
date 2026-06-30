@@ -82,6 +82,7 @@ interface ConversationWithMessages {
   clientName: string;
   callerNumber: string;
   fromNumber: string;
+  language: string;
   messages: ConversationMessage[];
 }
 
@@ -98,6 +99,7 @@ export async function getConversationForLLM(
     where: { id: conversationId, clientId },
     select: {
       callerNumber: true,
+      language: true,
       client: { select: { name: true } },
       call: {
         select: {
@@ -127,6 +129,7 @@ export async function getConversationForLLM(
     clientName: row.client.name,
     callerNumber: row.callerNumber,
     fromNumber: row.call.phoneNumber.number,
+    language: row.language,
     messages,
   };
 }
@@ -143,4 +146,17 @@ export async function updateConversationState(
     data: { state },
   });
   logger.info({ conversationId, state }, "État conversation mis à jour");
+}
+
+/**
+ * P5-T5 : met à jour la langue détectée de la conversation.
+ */
+export async function updateConversationLanguage(
+  conversationId: string,
+  language: "fr" | "nl"
+): Promise<void> {
+  await db.conversation.update({
+    where: { id: conversationId },
+    data: { language },
+  });
 }

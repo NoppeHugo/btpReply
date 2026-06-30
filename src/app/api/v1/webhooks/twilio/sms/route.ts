@@ -4,12 +4,15 @@ import {
   findOpenConversationByCallerNumber,
   getConversationForLLM,
   recordMessage,
+  updateConversationLanguage,
   updateConversationState,
 } from "@/lib/conversations/service";
 import { qualifyMessage } from "@/lib/llm/qualification";
 import { upsertLead } from "@/lib/leads/service";
 import { sendLeadAlert } from "@/lib/alerts/service";
-import { sendSms } from "@/lib/sms/service";
+import { sendSms, buildStopConfirmationBody } from "@/lib/sms/service";
+import { isNumberExcluded, addToOptOutList } from "@/lib/whitelist/service";
+import { detectLanguage } from "@/lib/language/detect";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { ConversationState, MessageDirection } from "@/generated/prisma/client";
@@ -46,7 +49,34 @@ export async function POST(req: NextRequest) {
 
   const { clientId } = phoneNumber;
 
-  // ── P2-T5 : retrouver la conversation ouverte ────────────────────────
+  // ── P5-T2 : traitement STOP en priorité absolue ───────────────────────
+  if (messageBody.trim().toUpperCase() === "STOP") {
+    await addToOptOutList(clientId, callerNumber);
+
+    // Fermer toute conversation ouverte pour ce numéro
+    const openConv = await findOpenConversationByCallerNumber(clientId, callerNumber);
+    if (openConv) {
+      await updateConversationState(openConv.id, ConversationState.closed);
+    }
+
+    // Confirmer l'opt-out
+    await sendSms({
+      to: callerNumber,
+      from: toNumber,
+      body: buildStopConfirmationBody(),
+    });
+
+    logger.info({ clientId, callerNumber }, "STOP traité — opt-out confirmé");
+    return new Response("", { status: 200 });
+  }
+
+  // ── P5-T1 : rejeter si numéro en liste blanche ───────────────────────
+  if (await isNumberExcluded(clientId, callerNumber)) {
+    logger.info({ clientId, callerNumber }, "SMS entrant d'un numéro exclu — ignoré");
+    return new Response("", { status: 200 });
+  }
+
+  // ── Retrouver la conversation ouverte ────────────────────────────────
   const conversation = await findOpenConversationByCallerNumber(clientId, callerNumber);
 
   if (!conversation) {
@@ -54,7 +84,7 @@ export async function POST(req: NextRequest) {
     return new Response("", { status: 200 });
   }
 
-  // ── Enregistrer le message entrant (P2) ──────────────────────────────
+  // ── Enregistrer le message entrant ───────────────────────────────────
   await recordMessage({
     clientId,
     conversationId: conversation.id,
@@ -63,8 +93,12 @@ export async function POST(req: NextRequest) {
     twilioSid,
   });
 
+  // ── P5-T5 : détection de langue sur le message entrant ───────────────
+  const detectedLang = detectLanguage(messageBody);
+  await updateConversationLanguage(conversation.id, detectedLang);
+
   logger.info(
-    { conversationId: conversation.id, clientId, callerNumber },
+    { conversationId: conversation.id, clientId, callerNumber, lang: detectedLang },
     "SMS entrant enregistré — lancement qualification"
   );
 
@@ -79,6 +113,7 @@ export async function POST(req: NextRequest) {
 
     const result = await qualifyMessage({
       clientName: convData.clientName,
+      language: convData.language,
       messages: convData.messages,
     });
 
@@ -139,7 +174,6 @@ export async function POST(req: NextRequest) {
       "Pipeline qualification terminé"
     );
   } catch (err) {
-    // On absorbe l'erreur : Twilio ne doit pas retry sur un 5xx
     logger.error({ err, conversationId: conversation.id }, "Erreur pipeline qualification");
   }
 

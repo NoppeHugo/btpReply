@@ -2,7 +2,13 @@ import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { MessageDirection } from "@/generated/prisma/client";
 import { getOrCreateConversation, recordMessage } from "@/lib/conversations/service";
-import { buildInitialSmsBody, sendSms } from "@/lib/sms/service";
+import {
+  buildInitialSmsBody,
+  buildOutOfHoursSmsBody,
+  sendSms,
+} from "@/lib/sms/service";
+import { isNumberExcluded } from "@/lib/whitelist/service";
+import { isWithinBusinessHours } from "@/lib/business-hours/service";
 
 interface IncomingCallParams {
   twilioCallSid: string;
@@ -17,10 +23,6 @@ interface CreateCallResult {
   fromNumber: string;
 }
 
-/**
- * Trouve le client par numéro Twilio, crée l'enregistrement Call.
- * Retourne null si le numéro est inconnu (appel non routé).
- */
 export async function handleIncomingCall(
   params: IncomingCallParams
 ): Promise<CreateCallResult | null> {
@@ -56,8 +58,9 @@ export async function handleIncomingCall(
 }
 
 /**
- * P2-T2 : envoie le premier SMS après le délai configuré (défaut 30s).
- * Appelé en fire-and-forget depuis le webhook Voice, après la réponse TwiML.
+ * P2-T2 / P5-T1 / P5-T3 : envoie le premier SMS après le délai configuré.
+ * - Skip si le numéro est en liste blanche (P5-T1)
+ * - SMS d'horaires si hors ouverture (P5-T3)
  */
 export function scheduleInitialSms(
   callId: string,
@@ -69,7 +72,18 @@ export function scheduleInitialSms(
 
   setTimeout(async () => {
     try {
-      const body = await buildInitialSmsBody(clientId);
+      // P5-T1 : vérifier liste blanche avant tout envoi
+      if (await isNumberExcluded(clientId, callerNumber)) {
+        logger.info({ clientId, callerNumber }, "Numéro en liste blanche — SMS initial ignoré");
+        return;
+      }
+
+      // P5-T3 : choisir le gabarit selon les horaires
+      const open = await isWithinBusinessHours(clientId, new Date());
+      const body = open
+        ? await buildInitialSmsBody(clientId)
+        : await buildOutOfHoursSmsBody(clientId);
+
       const twilioSid = await sendSms({ to: callerNumber, from: fromNumber, body });
 
       const conversationId = await getOrCreateConversation({

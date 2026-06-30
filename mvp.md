@@ -10,9 +10,9 @@
 ## ÉTAT ACTUEL  ← (mis à jour par l'agent à chaque tâche terminée)
 
 ```
-Phase en cours    : P4 — Alertes & récap quotidien
-Dernière tâche OK : P4-T4
-Prochaine tâche   : P5-T1
+Phase en cours    : P5 — Config & garde-fous (MVP livrable ✅)
+Dernière tâche OK : P5-T5
+Prochaine tâche   : P6-T1
 Bloqueurs         : P0-T3 bloquée — migration à relancer avec `pnpm db:migrate` quand Docker tourne. P1-T1 manuelle — acheter numéro Twilio +32 et configurer le webhook URL
 Mis à jour le     : 2026-06-30
 ```
@@ -109,11 +109,11 @@ Mis à jour le     : 2026-06-30
 
 **But :** rendre le service paramétrable et sûr pour un vrai client.
 
-- ☐ **P5-T1** Liste blanche : numéros exclus → aucun SMS auto.
-- ☐ **P5-T2** Opt-out STOP : réception → arrêt immédiat + marquage, respect permanent.
-- ☐ **P5-T3** Horaires : message différent jour / hors-heures / week-end.
-- ☐ **P5-T4** Gabarits de messages personnalisés par client (`MessageTemplate`).
-- ☐ **P5-T5** Détection FR/NL basique.
+- ☑ **P5-T1** Liste blanche : numéros exclus → aucun SMS auto.
+- ☑ **P5-T2** Opt-out STOP : réception → arrêt immédiat + marquage, respect permanent.
+- ☑ **P5-T3** Horaires : message différent jour / hors-heures / week-end.
+- ☑ **P5-T4** Gabarits de messages personnalisés par client (`MessageTemplate`).
+- ☑ **P5-T5** Détection FR/NL basique.
 
 **Acceptation :** un client peut être configuré de bout en bout sans toucher au code.
 
