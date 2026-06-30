@@ -1,0 +1,316 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  admin
+  owner
+}
+
+enum ClientStage {
+  prospect
+  active
+  paused
+}
+
+enum ConversationState {
+  open
+  qualified
+  handed_off
+  closed
+}
+
+enum MessageDirection {
+  inbound
+  outbound
+}
+
+enum LeadUrgency {
+  low
+  medium
+  high
+}
+
+enum LeadStatus {
+  new
+  to_callback
+  done
+}
+
+enum MessageChannel {
+  sms
+  email
+  in_app
+}
+
+enum DayOfWeek {
+  monday
+  tuesday
+  wednesday
+  thursday
+  friday
+  saturday
+  sunday
+}
+
+// ---------------------------------------------------------------------------
+// Client (tenant)
+// ---------------------------------------------------------------------------
+
+model Client {
+  id          String      @id @default(cuid())
+  name        String
+  displayName String?
+  stage       ClientStage @default(prospect)
+  timezone    String      @default("Europe/Brussels")
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  users            User[]
+  phoneNumbers     PhoneNumber[]
+  calls            Call[]
+  conversations    Conversation[]
+  leads            Lead[]
+  whitelistEntries WhitelistEntry[]
+  businessHours    BusinessHours[]
+  messageTemplates MessageTemplate[]
+  clientNotes      ClientNote[]
+  clientMessages   ClientMessage[]
+
+  @@map("clients")
+}
+
+// ---------------------------------------------------------------------------
+// User (dashboard access)
+// ---------------------------------------------------------------------------
+
+model User {
+  id        String   @id @default(cuid())
+  clientId  String
+  email     String   @unique
+  role      UserRole
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  client         Client          @relation(fields: [clientId], references: [id])
+  clientNotes    ClientNote[]
+  clientMessages ClientMessage[]
+
+  @@index([clientId])
+  @@map("users")
+}
+
+// ---------------------------------------------------------------------------
+// PhoneNumber (Twilio number bound to a client — webhook routing key)
+// ---------------------------------------------------------------------------
+
+model PhoneNumber {
+  id        String   @id @default(cuid())
+  clientId  String
+  number    String   @unique
+  label     String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  client Client @relation(fields: [clientId], references: [id])
+  calls  Call[]
+
+  @@index([clientId])
+  @@map("phone_numbers")
+}
+
+// ---------------------------------------------------------------------------
+// Call (every missed call captured)
+// ---------------------------------------------------------------------------
+
+model Call {
+  id            String   @id @default(cuid())
+  clientId      String
+  phoneNumberId String
+  callerNumber  String
+  calledAt      DateTime
+  twilioCallSid String   @unique
+  createdAt     DateTime @default(now())
+
+  client       Client        @relation(fields: [clientId], references: [id])
+  phoneNumber  PhoneNumber   @relation(fields: [phoneNumberId], references: [id])
+  conversation Conversation?
+
+  @@index([clientId])
+  @@index([callerNumber])
+  @@map("calls")
+}
+
+// ---------------------------------------------------------------------------
+// Conversation (SMS thread linked to a call / caller)
+// ---------------------------------------------------------------------------
+
+model Conversation {
+  id           String            @id @default(cuid())
+  clientId     String
+  callId       String            @unique
+  callerNumber String
+  state        ConversationState @default(open)
+  turnCount    Int               @default(0)
+  language     String            @default("fr")
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  client   Client    @relation(fields: [clientId], references: [id])
+  call     Call      @relation(fields: [callId], references: [id])
+  messages Message[]
+  lead     Lead?
+
+  @@index([clientId])
+  @@index([callerNumber])
+  @@map("conversations")
+}
+
+// ---------------------------------------------------------------------------
+// Message (each inbound / outbound SMS)
+// ---------------------------------------------------------------------------
+
+model Message {
+  id             String           @id @default(cuid())
+  clientId       String
+  conversationId String
+  direction      MessageDirection
+  body           String
+  twilioSid      String?          @unique
+  sentAt         DateTime         @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+
+  @@index([clientId])
+  @@index([conversationId])
+  @@map("messages")
+}
+
+// ---------------------------------------------------------------------------
+// Lead (qualified result from a conversation)
+// ---------------------------------------------------------------------------
+
+model Lead {
+  id             String      @id @default(cuid())
+  clientId       String
+  conversationId String      @unique
+  type           String?
+  urgency        LeadUrgency?
+  location       String?
+  availability   String?
+  summary        String
+  status         LeadStatus  @default(new)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  client       Client       @relation(fields: [clientId], references: [id])
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+
+  @@index([clientId])
+  @@map("leads")
+}
+
+// ---------------------------------------------------------------------------
+// WhitelistEntry (numbers excluded from auto-SMS)
+// ---------------------------------------------------------------------------
+
+model WhitelistEntry {
+  id        String   @id @default(cuid())
+  clientId  String
+  number    String
+  label     String?
+  createdAt DateTime @default(now())
+
+  client Client @relation(fields: [clientId], references: [id])
+
+  @@unique([clientId, number])
+  @@index([clientId])
+  @@map("whitelist_entries")
+}
+
+// ---------------------------------------------------------------------------
+// BusinessHours (per-client schedule for message variants)
+// ---------------------------------------------------------------------------
+
+model BusinessHours {
+  id        String    @id @default(cuid())
+  clientId  String
+  dayOfWeek DayOfWeek
+  openTime  String
+  closeTime String
+  closed    Boolean   @default(false)
+
+  client Client @relation(fields: [clientId], references: [id])
+
+  @@unique([clientId, dayOfWeek])
+  @@index([clientId])
+  @@map("business_hours")
+}
+
+// ---------------------------------------------------------------------------
+// MessageTemplate (custom message templates per client)
+// ---------------------------------------------------------------------------
+
+model MessageTemplate {
+  id        String   @id @default(cuid())
+  clientId  String
+  key       String
+  body      String
+  language  String   @default("fr")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  client Client @relation(fields: [clientId], references: [id])
+
+  @@unique([clientId, key, language])
+  @@index([clientId])
+  @@map("message_templates")
+}
+
+// ---------------------------------------------------------------------------
+// ClientNote (internal notes from founders about a client/PME)
+// ---------------------------------------------------------------------------
+
+model ClientNote {
+  id        String   @id @default(cuid())
+  clientId  String
+  authorId  String
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  client Client @relation(fields: [clientId], references: [id])
+  author User   @relation(fields: [authorId], references: [id])
+
+  @@index([clientId])
+  @@map("client_notes")
+}
+
+// ---------------------------------------------------------------------------
+// ClientMessage (outbound messages from founders to a client/artisan)
+// ---------------------------------------------------------------------------
+
+model ClientMessage {
+  id        String         @id @default(cuid())
+  clientId  String
+  authorId  String
+  channel   MessageChannel
+  body      String
+  status    String         @default("sent")
+  sentAt    DateTime       @default(now())
+
+  client Client @relation(fields: [clientId], references: [id])
+  author User   @relation(fields: [authorId], references: [id])
+
+  @@index([clientId])
+  @@map("client_messages")
+}
