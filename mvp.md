@@ -11,9 +11,9 @@
 
 ```
 Phase en cours    : P0 — Fondations
-Dernière tâche OK : P0-T8
-Prochaine tâche   : P0-T3 (migration, bloquée Docker) puis P1-T1
-Bloqueurs         : P0-T3 bloquée — migration à relancer avec `pnpm db:migrate` quand Docker tourne
+Dernière tâche OK : P1-T5
+Prochaine tâche   : P2-T1
+Bloqueurs         : P0-T3 bloquée — migration à relancer avec `pnpm db:migrate` quand Docker tourne. P1-T1 manuelle — acheter numéro Twilio +32 et configurer le webhook URL
 Mis à jour le     : 2026-06-30
 ```
 
@@ -49,11 +49,11 @@ Mis à jour le     : 2026-06-30
 
 **But :** détecter et journaliser chaque appel manqué.
 
-- ☐ **P1-T1** Acheter/configurer un numéro Twilio belge ; documenter le renvoi conditionnel côté client.
-- ☐ **P1-T2** Endpoint webhook Twilio Voice (vérif. signature `X-Twilio-Signature`).
-- ☐ **P1-T3** Router l'appel entrant vers le bon `Client` via le numéro `To`.
-- ☐ **P1-T4** Créer un enregistrement `Call` (appelant, horodatage, statut) pour chaque appel manqué.
-- ☐ **P1-T5** Journaliser même si aucun SMS ne suit (le patron a au moins numéro + heure).
+- ☐ **P1-T1** Acheter/configurer un numéro Twilio belge ; documenter le renvoi conditionnel côté client. *(manuel — à faire sur console Twilio)*
+- ☑ **P1-T2** Endpoint webhook Twilio Voice (vérif. signature `X-Twilio-Signature`).
+- ☑ **P1-T3** Router l'appel entrant vers le bon `Client` via le numéro `To`.
+- ☑ **P1-T4** Créer un enregistrement `Call` (appelant, horodatage, statut) pour chaque appel manqué.
+- ☑ **P1-T5** Journaliser même si aucun SMS ne suit (le patron a au moins numéro + heure).
 
 **Acceptation :** un appel manqué réel crée une ligne `Call` scopée au bon client.
 **Hors-scope :** SMS, qualification.
