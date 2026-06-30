@@ -8,7 +8,22 @@ function createPrismaClient() {
   return new PrismaClient({ adapter });
 }
 
-// Singleton en dev (évite de créer une connexion par hot-reload)
+// Singleton paresseux : le client n'est instancié qu'au premier accès réel,
+// jamais à l'import. Indispensable pour `next build`, qui charge les modules
+// de route sans DATABASE_URL (collecte des pages) et planterait sinon.
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
-export const db = globalForPrisma.prisma ?? createPrismaClient();
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = db;
+
+function getClient(): PrismaClient {
+  if (!globalForPrisma.prisma) {
+    globalForPrisma.prisma = createPrismaClient();
+  }
+  return globalForPrisma.prisma;
+}
+
+export const db = new Proxy({} as PrismaClient, {
+  get(_target, prop) {
+    const client = getClient();
+    const value = Reflect.get(client, prop);
+    return typeof value === "function" ? value.bind(client) : value;
+  },
+});
