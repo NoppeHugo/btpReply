@@ -10,9 +10,9 @@
 ## ÉTAT ACTUEL  ← (mis à jour par l'agent à chaque tâche terminée)
 
 ```
-Phase en cours    : P7 — Multi-tenant, onboarding & facturation ✅
-Dernière tâche OK : P7-T4
-Prochaine tâche   : P8-T1
+Phase en cours    : P8 — Pilote & mise en production (P8-T2 et P8-T4 manuelles)
+Dernière tâche OK : P8-T3
+Prochaine tâche   : P8-T2 (manuel — déployer chez le 1er client)
 Bloqueurs         : P0-T3 bloquée — migration à relancer avec `pnpm db:migrate` quand Docker tourne. P1-T1 manuelle — acheter numéro Twilio +32 et configurer le webhook URL
 Mis à jour le     : 2026-06-30
 ```
@@ -151,10 +151,10 @@ Mis à jour le     : 2026-06-30
 
 ## Phase 8 — Pilote & mise en production
 
-- ☐ **P8-T1** Checklist go-live (signatures webhooks, monitoring, alertes erreurs).
-- ☐ **P8-T2** Déploiement chez le 1er client pilote (setup offert).
-- ☐ **P8-T3** Boucle de feedback + ajustements des gabarits/qualif.
-- ☐ **P8-T4** Cas client / témoignage pour la vente.
+- ☑ **P8-T1** Checklist go-live (health check `/api/health`, Sentry, validateur env, page `/dashboard/admin/checklist`).
+- ☐ **P8-T2** Déploiement chez le 1er client pilote (setup offert). *(manuel)*
+- ☑ **P8-T3** Boucle de feedback : stats qualif par client (taux, moy tours, urgence), endpoint `/api/v1/clients/[id]/stats`.
+- ☐ **P8-T4** Cas client / témoignage pour la vente. *(manuel)*
 
 ---
 

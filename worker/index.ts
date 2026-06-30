@@ -1,7 +1,20 @@
 import "dotenv/config";
+import * as Sentry from "@sentry/node";
 import cron from "node-cron";
+import { validateEnv } from "../src/lib/env";
 import { runDailyRecap } from "./jobs/dailyRecap";
 import { runRgpdPurge } from "./jobs/rgpdPurge";
+
+// Sentry — initialiser avant tout le reste
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  enabled: !!process.env.SENTRY_DSN,
+  environment: process.env.NODE_ENV ?? "development",
+  tracesSampleRate: 0.1,
+});
+
+// Valider les variables d'environnement au démarrage
+validateEnv();
 
 // Récap quotidien — tous les jours à 20h (Europe/Brussels)
 cron.schedule(

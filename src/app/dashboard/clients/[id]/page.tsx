@@ -54,7 +54,7 @@ export default async function ClientDetailPage({
     now
   );
 
-  const [callsTotal, callsMonth, leadsTotal, leadsMonth, conversations, notes] =
+  const [callsTotal, callsMonth, leadsTotal, leadsMonth, conversations, notes, convAgg, convQualified, convHandedOff, convTotal] =
     await Promise.all([
       db.call.count({ where: { clientId: id } }),
       db.call.count({
@@ -96,6 +96,13 @@ export default async function ClientDetailPage({
           author: { select: { email: true } },
         },
       }),
+      db.conversation.aggregate({
+        where: { clientId: id },
+        _avg: { turnCount: true },
+      }),
+      db.conversation.count({ where: { clientId: id, state: "qualified" } }),
+      db.conversation.count({ where: { clientId: id, state: "handed_off" } }),
+      db.conversation.count({ where: { clientId: id } }),
     ]);
 
   const displayName = client.displayName ?? client.name;
@@ -136,6 +143,38 @@ export default async function ClientDetailPage({
           </div>
         ))}
       </div>
+
+      {/* Qualité qualification — P8-T3 */}
+      {convTotal > 0 && (
+        <section className="rounded-lg border border-gray-200 bg-white p-5">
+          <h2 className="mb-3 font-semibold text-gray-900">Qualité de qualification</h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[
+              {
+                label: "Taux qualification",
+                value: `${Math.round(((convQualified + convHandedOff) / convTotal) * 100)} %`,
+              },
+              {
+                label: "Qualifiés",
+                value: convQualified,
+              },
+              {
+                label: "Transmis humain",
+                value: convHandedOff,
+              },
+              {
+                label: "Moy. tours LLM",
+                value: (Math.round((convAgg._avg.turnCount ?? 0) * 10) / 10).toFixed(1),
+              },
+            ].map((s) => (
+              <div key={s.label} className="rounded-md bg-gray-50 p-3">
+                <p className="text-xs text-gray-500">{s.label}</p>
+                <p className="text-xl font-bold text-gray-900">{s.value}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Users */}
       <section className="rounded-lg border border-gray-200 bg-white p-5">
