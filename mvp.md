@@ -11,10 +11,10 @@
 
 ```
 Phase en cours    : P0 — Fondations
-Dernière tâche OK : (aucune)
-Prochaine tâche   : P0-T1
+Dernière tâche OK : P0-T1
+Prochaine tâche   : P0-T2
 Bloqueurs         : (aucun)
-Mis à jour le     : 2026-06-29
+Mis à jour le     : 2026-06-30
 ```
 
 ---
@@ -31,7 +31,7 @@ Mis à jour le     : 2026-06-29
 
 **But :** un squelette qui tourne, déployé, avec un tenant de test en base.
 
-- ☐ **P0-T1** Initialiser le repo (pnpm, TypeScript strict, Next.js App Router, Tailwind + shadcn/ui).
+- ☑ **P0-T1** Initialiser le repo (pnpm, TypeScript strict, Next.js App Router, Tailwind + shadcn/ui).
 - ☐ **P0-T2** Mettre en place Prisma + `schema.prisma` (toutes les tables du modèle de `techStack.md §3`).
 - ☐ **P0-T3** Connecter Postgres (Supabase EU) + première migration.
 - ☐ **P0-T4** Worker séparé (`/worker`) avec un cron vide qui démarre.
