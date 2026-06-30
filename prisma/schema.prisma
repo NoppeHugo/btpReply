@@ -94,12 +94,13 @@ model Client {
 // ---------------------------------------------------------------------------
 
 model User {
-  id        String   @id @default(cuid())
-  clientId  String
-  email     String   @unique
-  role      UserRole
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  clientId     String
+  email        String   @unique
+  role         UserRole
+  passwordHash String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   client         Client          @relation(fields: [clientId], references: [id])
   clientNotes    ClientNote[]

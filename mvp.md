@@ -10,9 +10,9 @@
 ## ÉTAT ACTUEL  ← (mis à jour par l'agent à chaque tâche terminée)
 
 ```
-Phase en cours    : P5 — Config & garde-fous (MVP livrable ✅)
-Dernière tâche OK : P5-T5
-Prochaine tâche   : P6-T1
+Phase en cours    : P6 — Dashboard admin & gestion client ✅
+Dernière tâche OK : P6-T9
+Prochaine tâche   : P7-T1
 Bloqueurs         : P0-T3 bloquée — migration à relancer avec `pnpm db:migrate` quand Docker tourne. P1-T1 manuelle — acheter numéro Twilio +32 et configurer le webhook URL
 Mis à jour le     : 2026-06-30
 ```
@@ -125,15 +125,15 @@ Mis à jour le     : 2026-06-30
 
 **But :** visualisation + un premier socle de gestion de VOS clients (les PME), exposé via l'API v1 pour être repris par une app mobile.
 
-- ☐ **P6-T1** Auth (admin + owner), jetons app-ready (cf. `techStack.md §8.5`).
-- ☐ **P6-T2** Vue appels/leads + statuts (nouveau / à rappeler / traité).
-- ☐ **P6-T3** Compteur ROI affiché.
-- ☐ **P6-T4** Écran de config client (horaires, liste blanche, gabarits).
-- ☐ **P6-T5** Liste de vos clients (PME) + fiche client, via `/api/v1/clients`.
-- ☐ **P6-T6** Récap par client : activité (appels captés, leads, ROI) + journal des échanges.
-- ☐ **P6-T7** Renommage d'un client (`displayName`).
-- ☐ **P6-T8** Notes internes par client (`ClientNote`).
-- ☐ **P6-T9** Envoi d'un message à un client (artisan) — SMS/email — journalisé (`ClientMessage`).
+- ☑ **P6-T1** Auth (admin + owner), jetons app-ready (cf. `techStack.md §8.5`).
+- ☑ **P6-T2** Vue appels/leads + statuts (nouveau / à rappeler / traité).
+- ☑ **P6-T3** Compteur ROI affiché.
+- ☑ **P6-T4** Écran de config client (horaires, liste blanche, gabarits).
+- ☑ **P6-T5** Liste de vos clients (PME) + fiche client, via `/api/v1/clients`.
+- ☑ **P6-T6** Récap par client : activité (appels captés, leads, ROI) + journal des échanges.
+- ☑ **P6-T7** Renommage d'un client (`displayName`).
+- ☑ **P6-T8** Notes internes par client (`ClientNote`).
+- ☑ **P6-T9** Envoi d'un message à un client (artisan) — SMS/email — journalisé (`ClientMessage`).
 
 > Toutes les actions P6-T5 → P6-T9 passent par `/api/v1` (compatibles app mobile dès le départ).
 
