@@ -164,6 +164,16 @@ La plateforme est **API-first** : le dashboard web ET la future app mobile conso
 
 ---
 
+## 8.6 Facturation
+
+| Élément | Choix | Notes |
+|---|---|---|
+| Paiements | **Stripe** | Subscriptions mensuelles, Billing Portal, webhooks signés. |
+| Plans | `base` (inclus) · `plus` (numéro supplémentaire +39 €/mois) | Price IDs configurés dans `.env` (`STRIPE_PRICE_BASE`, `STRIPE_PRICE_PLUS`). |
+| Données billing | `stripeCustomerId String?` + `plan String` sur `Client` | Pas de modèle séparé en MVP. |
+
+---
+
 ## 9. Infra & déploiement
 
 | Élément | Choix | Pourquoi |
@@ -224,3 +234,4 @@ Chaque décision technique structurante est consignée ici, datée. Format : `AA
 - **2026-06-30 — Prisma 7 : driver adapter obligatoire (`@prisma/adapter-pg` + `pg`).** Raison : Prisma 7 a supprimé la connexion directe par URL dans PrismaClient ; singleton dans `src/lib/db.ts`.
 - **2026-06-30 — Auth API v1 P0 par token statique (`API_SECRET_KEY`), remplacé par JWT en P6-T1.** Raison : pas de sur-ingénierie en P0 ; le contrat bearer est posé dès maintenant pour la compatibilité mobile.
 - **2026-06-30 — Postgres self-hosted sur VPS Hetzner plutôt que Supabase.** Raison : choix utilisateur ; réduit les coûts et garde toutes les données sur le VPS. Docker Compose gère Postgres en local (dev) et en prod.
+- **2026-06-30 — Stripe retenu pour la facturation (P7-T3).** Raison : standard, connu des agents, excellent support des subscriptions et Billing Portal. Intégration minimale MVP : customer + subscription + webhook + portal.

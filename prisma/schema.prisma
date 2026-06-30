@@ -67,13 +67,15 @@ enum DayOfWeek {
 // ---------------------------------------------------------------------------
 
 model Client {
-  id          String      @id @default(cuid())
-  name        String
-  displayName String?
-  stage       ClientStage @default(prospect)
-  timezone    String      @default("Europe/Brussels")
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id               String      @id @default(cuid())
+  name             String
+  displayName      String?
+  stage            ClientStage @default(prospect)
+  timezone         String      @default("Europe/Brussels")
+  stripeCustomerId String?
+  plan             String      @default("base")
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
 
   users            User[]
   phoneNumbers     PhoneNumber[]

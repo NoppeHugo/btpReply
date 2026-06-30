@@ -53,7 +53,7 @@ export async function recordMessage(params: RecordMessageParams): Promise<string
   });
 
   await db.conversation.update({
-    where: { id: params.conversationId },
+    where: { id: params.conversationId, clientId: params.clientId },
     data: { turnCount: { increment: 1 }, updatedAt: new Date() },
   });
 
@@ -136,13 +136,17 @@ export async function getConversationForLLM(
 
 /**
  * P3-T3 / P3-T5 : met à jour l'état de la conversation.
+ * clientId scopé pour défense en profondeur (P7-T1).
  */
 export async function updateConversationState(
   conversationId: string,
-  state: ConversationState
+  state: ConversationState,
+  clientId?: string
 ): Promise<void> {
   await db.conversation.update({
-    where: { id: conversationId },
+    where: clientId
+      ? { id: conversationId, clientId }
+      : { id: conversationId },
     data: { state },
   });
   logger.info({ conversationId, state }, "État conversation mis à jour");
@@ -150,13 +154,17 @@ export async function updateConversationState(
 
 /**
  * P5-T5 : met à jour la langue détectée de la conversation.
+ * clientId scopé pour défense en profondeur (P7-T1).
  */
 export async function updateConversationLanguage(
   conversationId: string,
-  language: "fr" | "nl"
+  language: "fr" | "nl",
+  clientId?: string
 ): Promise<void> {
   await db.conversation.update({
-    where: { id: conversationId },
+    where: clientId
+      ? { id: conversationId, clientId }
+      : { id: conversationId },
     data: { language },
   });
 }

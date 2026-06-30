@@ -3,6 +3,7 @@ import { redirect, notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { monthBoundsInTz } from "@/lib/time";
 import ClientJournal from "./ClientJournal";
+import ClientBilling from "./ClientBilling";
 
 const STAGE_BADGE: Record<string, string> = {
   prospect: "bg-yellow-100 text-yellow-700",
@@ -36,6 +37,8 @@ export default async function ClientDetailPage({
       displayName: true,
       stage: true,
       timezone: true,
+      plan: true,
+      stripeCustomerId: true,
       createdAt: true,
       users: {
         select: { id: true, email: true, role: true },
@@ -188,6 +191,13 @@ export default async function ClientDetailPage({
           </div>
         )}
       </section>
+
+      {/* Billing */}
+      <ClientBilling
+        clientId={id}
+        plan={client.plan}
+        stripeCustomerId={client.stripeCustomerId}
+      />
 
       {/* Journal (notes + message) — client component */}
       <ClientJournal
