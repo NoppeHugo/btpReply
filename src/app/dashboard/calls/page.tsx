@@ -47,7 +47,7 @@ export default async function CallsPage() {
       <h1 className="mb-6 text-xl font-semibold text-gray-900">Appels captés</h1>
 
       {calls.length === 0 ? (
-        <p className="text-sm text-gray-500">Aucun appel pour l'instant.</p>
+        <p className="text-sm text-gray-500">Aucun appel pour l&apos;instant.</p>
       ) : (
         <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
           <table className="w-full text-sm">

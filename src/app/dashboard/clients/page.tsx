@@ -44,7 +44,7 @@ export default async function ClientsPage() {
       </div>
 
       {clients.length === 0 ? (
-        <p className="text-sm text-gray-500">Aucun client pour l'instant.</p>
+        <p className="text-sm text-gray-500">Aucun client pour l&apos;instant.</p>
       ) : (
         <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
           <table className="w-full text-sm">

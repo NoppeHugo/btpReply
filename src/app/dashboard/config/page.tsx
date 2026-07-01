@@ -108,7 +108,7 @@ function BusinessHoursSection() {
 
   return (
     <section className="rounded-lg border border-gray-200 bg-white p-5">
-      <h2 className="mb-4 font-semibold text-gray-900">Heures d'ouverture</h2>
+      <h2 className="mb-4 font-semibold text-gray-900">Heures d&apos;ouverture</h2>
       <div className="space-y-2">
         {hours.map((h, i) => (
           <div key={h.dayOfWeek} className="flex items-center gap-3">
@@ -318,7 +318,8 @@ function TemplatesSection() {
     <section className="rounded-lg border border-gray-200 bg-white p-5">
       <h2 className="mb-1 font-semibold text-gray-900">Modèles de SMS</h2>
       <p className="mb-4 text-xs text-gray-500">
-        Laissez vide pour utiliser le modèle par défaut. N'utilisez jamais les mots "bot", "IA" ou "automatique".
+        Laissez vide pour utiliser le modèle par défaut. N&apos;utilisez jamais
+        les mots «&nbsp;bot&nbsp;», «&nbsp;IA&nbsp;» ou «&nbsp;automatique&nbsp;».
       </p>
 
       <div className="space-y-6">

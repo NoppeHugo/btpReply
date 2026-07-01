@@ -97,7 +97,7 @@ export default async function RoiPage() {
       </div>
 
       <p className="mt-6 text-xs text-gray-400">
-        * Les estimations de chiffre d'affaires sont basées sur une valeur
+        * Les estimations de chiffre d&apos;affaires sont basées sur une valeur
         moyenne de {AVG_CUSTOMER_VALUE} € par client. Cette valeur peut être
         ajustée selon votre secteur.
       </p>

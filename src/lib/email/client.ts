@@ -11,4 +11,4 @@ export function getResendClient(): Resend {
 }
 
 export const FROM_EMAIL =
-  process.env.FROM_EMAIL ?? "btpReply <noreply@btpreply.be>";
+  process.env.FROM_EMAIL ?? "Rappl <noreply@rappl.be>";

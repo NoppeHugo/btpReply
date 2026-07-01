@@ -90,7 +90,7 @@ export default async function ChecklistPage() {
 
       {/* Env vars */}
       <section className="rounded-lg border border-gray-200 bg-white p-5">
-        <h2 className="mb-3 font-semibold text-gray-900">Variables d'environnement</h2>
+        <h2 className="mb-3 font-semibold text-gray-900">Variables d&apos;environnement</h2>
         <div className="mb-4">
           <p className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-400">
             Requises

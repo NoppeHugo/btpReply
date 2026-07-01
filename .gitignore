@@ -38,6 +38,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# dépôt git imbriqué parasite (à ne jamais committer)
+/btpReply/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
