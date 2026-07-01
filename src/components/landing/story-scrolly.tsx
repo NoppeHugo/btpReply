@@ -102,8 +102,8 @@ export function StoryScrolly() {
               data-index={i}
               className={cn(
                 // Mobile : hauteur du bloc = distance de scroll pour changer d'écran.
-                // Augmenter `100svh` (ex. 130svh) pour exiger encore plus de scroll.
-                "flex min-h-[100svh] items-center lg:min-h-screen",
+                // Augmenter cette valeur pour exiger encore plus de scroll.
+                "flex min-h-[150svh] items-center lg:min-h-screen",
                 onLeft ? "lg:justify-start" : "lg:justify-end",
               )}
             >
