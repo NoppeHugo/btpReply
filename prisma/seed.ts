@@ -35,6 +35,18 @@ async function main() {
     },
   });
 
+  // Compte owner (artisan) pour tester la vue côté client
+  const owner = await prisma.user.upsert({
+    where: { email: "patron@plomberie-dupont.be" },
+    update: { passwordHash },
+    create: {
+      clientId: client.id,
+      email: "patron@plomberie-dupont.be",
+      role: UserRole.owner,
+      passwordHash,
+    },
+  });
+
   const phone = await prisma.phoneNumber.upsert({
     where: { number: "+32499000001" },
     update: {},
@@ -46,7 +58,12 @@ async function main() {
     },
   });
 
-  console.log("Seed OK", { client: client.id, user: user.email, phone: phone.number });
+  console.log("Seed OK", {
+    client: client.id,
+    admin: user.email,
+    owner: owner.email,
+    phone: phone.number,
+  });
 }
 
 main()
