@@ -40,8 +40,8 @@ function Badge({ ok, label }: { ok: boolean; label: string }) {
     <span
       className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
         ok
-          ? "bg-green-100 text-green-700"
-          : "bg-red-100 text-red-700"
+          ? "bg-emerald-500/15 text-emerald-300"
+          : "bg-red-500/15 text-red-400"
       }`}
     >
       {ok ? "✓" : "✗"} {label}
@@ -68,12 +68,12 @@ export default async function ChecklistPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <h1 className="text-xl font-semibold text-gray-900">Checklist go-live</h1>
+        <h1 className="app-h1">Checklist go-live</h1>
         <span
           className={`rounded-full px-3 py-1 text-sm font-medium ${
             globalOk
-              ? "bg-green-100 text-green-700"
-              : "bg-red-100 text-red-700"
+              ? "bg-emerald-500/15 text-emerald-300"
+              : "bg-red-500/15 text-red-400"
           }`}
         >
           {globalOk ? "Prêt pour la production" : "Action requise"}
@@ -81,38 +81,38 @@ export default async function ChecklistPage() {
       </div>
 
       {/* DB */}
-      <section className="rounded-lg border border-gray-200 bg-white p-5">
-        <h2 className="mb-3 font-semibold text-gray-900">Base de données</h2>
+      <section className="app-card">
+        <h2 className="app-h2 mb-3">Base de données</h2>
         <div className="flex items-center gap-3">
           <Badge ok={dbResult.ok} label={dbResult.ok ? `Connecté (${dbResult.latencyMs} ms)` : "Inaccessible"} />
         </div>
       </section>
 
       {/* Env vars */}
-      <section className="rounded-lg border border-gray-200 bg-white p-5">
-        <h2 className="mb-3 font-semibold text-gray-900">Variables d&apos;environnement</h2>
+      <section className="app-card">
+        <h2 className="app-h2 mb-3">Variables d&apos;environnement</h2>
         <div className="mb-4">
-          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-400">
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-white/40">
             Requises
           </p>
           <div className="flex flex-wrap gap-2">
             {requiredEnv.map((e) => (
               <div key={e.key} className="flex flex-col gap-0.5">
                 <Badge ok={e.set} label={e.key} />
-                <span className="pl-1 text-[10px] text-gray-400">{e.label}</span>
+                <span className="pl-1 text-[10px] text-white/40">{e.label}</span>
               </div>
             ))}
           </div>
         </div>
         <div>
-          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-400">
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-white/40">
             Optionnelles
           </p>
           <div className="flex flex-wrap gap-2">
             {optionalEnv.map((e) => (
               <div key={e.key} className="flex flex-col gap-0.5">
                 <Badge ok={e.set} label={e.key} />
-                <span className="pl-1 text-[10px] text-gray-400">{e.label}</span>
+                <span className="pl-1 text-[10px] text-white/40">{e.label}</span>
               </div>
             ))}
           </div>
@@ -120,12 +120,12 @@ export default async function ChecklistPage() {
       </section>
 
       {/* Clients actifs */}
-      <section className="rounded-lg border border-gray-200 bg-white p-5">
-        <h2 className="mb-3 font-semibold text-gray-900">
+      <section className="app-card">
+        <h2 className="app-h2 mb-3">
           Clients actifs ({activeClients.length})
         </h2>
         {activeClients.length === 0 ? (
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-white/40">
             Aucun client en stage <code>active</code> — onboardez le premier client.
           </p>
         ) : (
@@ -133,9 +133,9 @@ export default async function ChecklistPage() {
             {activeClients.map((c) => (
               <div
                 key={c.id}
-                className="flex items-center justify-between rounded-md bg-gray-50 px-3 py-2"
+                className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2"
               >
-                <span className="text-sm font-medium text-gray-800">{c.name}</span>
+                <span className="text-sm font-medium text-white/80">{c.name}</span>
                 <div className="flex gap-2">
                   <Badge ok={c.hasPhone} label="Numéro Twilio" />
                   <Badge ok={c.hasOwner} label="Compte owner" />
@@ -148,9 +148,9 @@ export default async function ChecklistPage() {
       </section>
 
       {/* Checklist manuelle */}
-      <section className="rounded-lg border border-gray-200 bg-white p-5">
-        <h2 className="mb-3 font-semibold text-gray-900">Checklist manuelle</h2>
-        <ul className="space-y-2 text-sm text-gray-700">
+      <section className="app-card">
+        <h2 className="app-h2 mb-3">Checklist manuelle</h2>
+        <ul className="space-y-2 text-sm text-white/70">
           {[
             "Numéro Twilio +32 acheté et configuré en renvoi conditionnel chez le client (P1-T1)",
             "Webhook Voice URL : https://[domaine]/api/v1/webhooks/twilio/voice",
@@ -163,7 +163,7 @@ export default async function ChecklistPage() {
             "Seed admin prod : `pnpm db:seed` avec SEED_ADMIN_PASSWORD fort",
           ].map((item, i) => (
             <li key={i} className="flex gap-2">
-              <span className="mt-0.5 text-gray-300">☐</span>
+              <span className="mt-0.5 text-white/30">☐</span>
               <span>{item}</span>
             </li>
           ))}

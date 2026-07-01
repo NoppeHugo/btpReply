@@ -69,8 +69,8 @@ export default function ClientJournal({
   return (
     <div className="space-y-6">
       {/* Notes internes */}
-      <section className="rounded-lg border border-gray-200 bg-white p-5">
-        <h2 className="mb-3 font-semibold text-gray-900">Notes internes</h2>
+      <section className="app-card">
+        <h2 className="app-h2 mb-3">Notes internes</h2>
 
         <div className="mb-4 flex gap-2">
           <textarea
@@ -78,28 +78,28 @@ export default function ClientJournal({
             value={noteBody}
             onChange={(e) => setNoteBody(e.target.value)}
             placeholder="Note interne (visible uniquement par l'équipe btpReply)…"
-            className="flex-1 rounded border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="app-input flex-1"
           />
           <button
             onClick={addNote}
             disabled={savingNote || !noteBody.trim()}
-            className="self-start rounded-md bg-gray-800 px-3 py-2 text-sm text-white hover:bg-gray-900 disabled:opacity-50"
+            className="btn-ghost self-start border border-white/10"
           >
             Ajouter
           </button>
         </div>
 
         {notes.length === 0 ? (
-          <p className="text-sm text-gray-400">Aucune note.</p>
+          <p className="text-sm text-white/40">Aucune note.</p>
         ) : (
           <ul className="space-y-2">
             {notes.map((n) => (
               <li
                 key={n.id}
-                className="rounded-md bg-yellow-50 px-3 py-2 text-sm"
+                className="rounded-lg border border-amber-500/20 bg-amber-500/[0.06] px-3 py-2 text-sm"
               >
-                <p className="text-gray-800">{n.body}</p>
-                <p className="mt-1 text-xs text-gray-400">
+                <p className="text-white/80">{n.body}</p>
+                <p className="mt-1 text-xs text-white/40">
                   {n.authorEmail} •{" "}
                   {new Date(n.createdAt).toLocaleString("fr-BE", {
                     day: "2-digit",
@@ -115,11 +115,11 @@ export default function ClientJournal({
       </section>
 
       {/* Message au client */}
-      <section className="rounded-lg border border-gray-200 bg-white p-5">
-        <h2 className="mb-3 font-semibold text-gray-900">Message au client</h2>
+      <section className="app-card">
+        <h2 className="app-h2 mb-3">Message au client</h2>
 
         <div className="mb-3 flex gap-3">
-          <label className="flex items-center gap-1.5 text-sm text-gray-600">
+          <label className="flex items-center gap-1.5 text-sm text-white/60">
             <input
               type="radio"
               name="channel"
@@ -129,7 +129,7 @@ export default function ClientJournal({
             />
             Interne
           </label>
-          <label className="flex items-center gap-1.5 text-sm text-gray-600">
+          <label className="flex items-center gap-1.5 text-sm text-white/60">
             <input
               type="radio"
               name="channel"
@@ -147,12 +147,12 @@ export default function ClientJournal({
             value={msgBody}
             onChange={(e) => setMsgBody(e.target.value)}
             placeholder="Message à envoyer au propriétaire du compte…"
-            className="flex-1 rounded border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="app-input flex-1"
           />
           <button
             onClick={sendMessage}
             disabled={sendingMsg || !msgBody.trim()}
-            className="self-start rounded-md bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+            className="btn-primary self-start"
           >
             {msgSent ? "Envoyé ✓" : "Envoyer"}
           </button>

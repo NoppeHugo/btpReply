@@ -51,52 +51,49 @@ export default async function RoiPage() {
       label: "Appels captés aujourd'hui",
       value: callsToday,
       sub: `${callsMonth} ce mois`,
-      color: "text-blue-600",
+      color: "text-white",
     },
     {
       label: "Leads générés (total)",
       value: leadsTotal,
       sub: `${leadsMonth} ce mois`,
-      color: "text-purple-600",
+      color: "text-white",
     },
     {
       label: "Leads traités",
       value: leadsDone,
       sub: `Taux de conversion ${conversionRate}%`,
-      color: "text-green-600",
+      color: "text-emerald-400",
     },
     {
       label: "Chiffre d'affaires estimé",
       value: `${estimatedRevenue.toLocaleString("fr-BE")} €`,
       sub: `Basé sur ${AVG_CUSTOMER_VALUE} € / client`,
-      color: "text-emerald-600",
+      color: "text-amber-400",
     },
     {
       label: "Appels captés (total)",
       value: callsTotal,
       sub: "Depuis le lancement",
-      color: "text-gray-700",
+      color: "text-white",
     },
   ];
 
   return (
     <div>
-      <h1 className="mb-6 text-xl font-semibold text-gray-900">ROI & Statistiques</h1>
+      <h1 className="app-h1 mb-6">ROI &amp; Statistiques</h1>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {stats.map((s) => (
-          <div
-            key={s.label}
-            className="rounded-lg border border-gray-200 bg-white p-5"
-          >
-            <p className="mb-1 text-sm text-gray-500">{s.label}</p>
+          <div key={s.label} className="app-card">
+            <p className="mb-1 text-sm text-white/50">{s.label}</p>
             <p className={`text-3xl font-bold ${s.color}`}>{s.value}</p>
-            <p className="mt-1 text-xs text-gray-400">{s.sub}</p>
+            <p className="mt-1 text-xs text-white/30">{s.sub}</p>
           </div>
         ))}
       </div>
 
-      <p className="mt-6 text-xs text-gray-400">
+      <p className="mt-6 text-xs text-white/30">
         * Les estimations de chiffre d&apos;affaires sont basées sur une valeur
         moyenne de {AVG_CUSTOMER_VALUE} € par client. Cette valeur peut être
         ajustée selon votre secteur.

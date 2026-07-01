@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { PhoneMissed } from "lucide-react";
 import { signOut } from "@/auth";
 
 export default async function DashboardLayout({
@@ -14,30 +15,33 @@ export default async function DashboardLayout({
   const isAdmin = session.user.role === "admin";
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="app-shell flex">
       {/* Sidebar */}
-      <aside className="w-56 shrink-0 border-r border-gray-200 bg-white">
-        <div className="flex h-16 items-center border-b border-gray-200 px-4">
-          <span className="text-lg font-bold text-blue-600">btpReply</span>
+      <aside className="relative flex w-56 shrink-0 flex-col border-r border-white/10 bg-neutral-950">
+        <div className="flex h-16 items-center gap-2 border-b border-white/10 px-4">
+          <span className="flex size-7 items-center justify-center rounded-lg bg-amber-500 text-neutral-950">
+            <PhoneMissed className="size-4" />
+          </span>
+          <span className="text-sm font-semibold tracking-tight text-white">
+            Rappl
+          </span>
         </div>
 
         <nav className="flex flex-col gap-1 p-3">
-          {isAdmin && (
-            <NavLink href="/dashboard/clients" label="👥 Clients" />
-          )}
+          {isAdmin && <NavLink href="/dashboard/clients" label="👥 Clients" />}
           {isAdmin && (
             <NavLink href="/dashboard/admin/checklist" label="🚀 Go-live" />
           )}
           <NavLink href="/dashboard/calls" label="📞 Appels" />
           <NavLink href="/dashboard/leads" label="✅ Leads" />
           <NavLink href="/dashboard/roi" label="📊 ROI" />
-          {!isAdmin && (
-            <NavLink href="/dashboard/config" label="⚙️ Config" />
-          )}
+          {!isAdmin && <NavLink href="/dashboard/config" label="⚙️ Config" />}
         </nav>
 
-        <div className="absolute bottom-0 w-56 border-t border-gray-200 p-3">
-          <p className="mb-2 truncate text-xs text-gray-500">{session.user.email}</p>
+        <div className="mt-auto border-t border-white/10 p-3">
+          <p className="mb-2 truncate text-xs text-white/40">
+            {session.user.email}
+          </p>
           <form
             action={async () => {
               "use server";
@@ -46,7 +50,7 @@ export default async function DashboardLayout({
           >
             <button
               type="submit"
-              className="w-full rounded-md px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100"
+              className="w-full rounded-lg px-3 py-1.5 text-left text-sm text-white/60 transition-colors hover:bg-white/5 hover:text-white"
             >
               Déconnexion
             </button>
@@ -62,10 +66,7 @@ export default async function DashboardLayout({
 
 function NavLink({ href, label }: { href: string; label: string }) {
   return (
-    <Link
-      href={href}
-      className="rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-    >
+    <Link href={href} className="nav-link">
       {label}
     </Link>
   );

@@ -6,9 +6,9 @@ import ClientJournal from "./ClientJournal";
 import ClientBilling from "./ClientBilling";
 
 const STAGE_BADGE: Record<string, string> = {
-  prospect: "bg-yellow-100 text-yellow-700",
-  active: "bg-green-100 text-green-700",
-  paused: "bg-gray-100 text-gray-500",
+  prospect: "bg-amber-500/15 text-amber-300",
+  active: "bg-emerald-500/15 text-emerald-300",
+  paused: "bg-white/10 text-white/50",
 };
 
 const CONV_STATE_LABEL: Record<string, string> = {
@@ -112,9 +112,9 @@ export default async function ClientDetailPage({
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">{displayName}</h1>
+          <h1 className="app-h1">{displayName}</h1>
           {client.displayName && (
-            <p className="text-sm text-gray-400">{client.name}</p>
+            <p className="text-sm text-white/40">{client.name}</p>
           )}
         </div>
         <span
@@ -134,20 +134,17 @@ export default async function ClientDetailPage({
           { label: "Leads total", value: leadsTotal },
           { label: "Leads ce mois", value: leadsMonth },
         ].map((s) => (
-          <div
-            key={s.label}
-            className="rounded-lg border border-gray-200 bg-white p-4"
-          >
-            <p className="text-xs text-gray-500">{s.label}</p>
-            <p className="text-2xl font-bold text-gray-900">{s.value}</p>
+          <div key={s.label} className="app-card-sm">
+            <p className="text-xs text-white/50">{s.label}</p>
+            <p className="text-2xl font-bold text-white">{s.value}</p>
           </div>
         ))}
       </div>
 
       {/* Qualité qualification — P8-T3 */}
       {convTotal > 0 && (
-        <section className="rounded-lg border border-gray-200 bg-white p-5">
-          <h2 className="mb-3 font-semibold text-gray-900">Qualité de qualification</h2>
+        <section className="app-card">
+          <h2 className="app-h2 mb-3">Qualité de qualification</h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
               {
@@ -167,9 +164,9 @@ export default async function ClientDetailPage({
                 value: (Math.round((convAgg._avg.turnCount ?? 0) * 10) / 10).toFixed(1),
               },
             ].map((s) => (
-              <div key={s.label} className="rounded-md bg-gray-50 p-3">
-                <p className="text-xs text-gray-500">{s.label}</p>
-                <p className="text-xl font-bold text-gray-900">{s.value}</p>
+              <div key={s.label} className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
+                <p className="text-xs text-white/50">{s.label}</p>
+                <p className="text-xl font-bold text-white">{s.value}</p>
               </div>
             ))}
           </div>
@@ -177,16 +174,16 @@ export default async function ClientDetailPage({
       )}
 
       {/* Users */}
-      <section className="rounded-lg border border-gray-200 bg-white p-5">
-        <h2 className="mb-3 font-semibold text-gray-900">Utilisateurs</h2>
+      <section className="app-card">
+        <h2 className="app-h2 mb-3">Utilisateurs</h2>
         {client.users.length === 0 ? (
-          <p className="text-sm text-gray-400">Aucun utilisateur.</p>
+          <p className="text-sm text-white/40">Aucun utilisateur.</p>
         ) : (
           <ul className="space-y-1">
             {client.users.map((u) => (
               <li key={u.id} className="flex items-center gap-3 text-sm">
-                <span className="font-medium text-gray-700">{u.email}</span>
-                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
+                <span className="font-medium text-white/80">{u.email}</span>
+                <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-white/50">
                   {u.role}
                 </span>
               </li>
@@ -196,32 +193,32 @@ export default async function ClientDetailPage({
       </section>
 
       {/* Conversations */}
-      <section className="rounded-lg border border-gray-200 bg-white p-5">
-        <h2 className="mb-3 font-semibold text-gray-900">
+      <section className="app-card">
+        <h2 className="app-h2 mb-3">
           Dernières conversations
         </h2>
         {conversations.length === 0 ? (
-          <p className="text-sm text-gray-400">Aucune conversation.</p>
+          <p className="text-sm text-white/40">Aucune conversation.</p>
         ) : (
           <div className="space-y-2">
             {conversations.map((c) => (
               <div
                 key={c.id}
-                className="flex items-start justify-between rounded-md bg-gray-50 px-3 py-2 text-sm"
+                className="flex items-start justify-between rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm"
               >
                 <div>
-                  <span className="font-mono text-xs">{c.callerNumber}</span>
+                  <span className="font-mono text-xs text-white">{c.callerNumber}</span>
                   {c.lead?.summary && (
-                    <p className="mt-0.5 text-xs text-gray-600">
+                    <p className="mt-0.5 text-xs text-white/60">
                       {c.lead.summary}
                     </p>
                   )}
                 </div>
                 <div className="ml-4 shrink-0 text-right">
-                  <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs text-blue-700">
+                  <span className="pill">
                     {CONV_STATE_LABEL[c.state] ?? c.state}
                   </span>
-                  <p className="mt-1 text-xs text-gray-400">
+                  <p className="mt-1 text-xs text-white/40">
                     {new Date(c.createdAt).toLocaleDateString("fr-BE")}
                   </p>
                 </div>

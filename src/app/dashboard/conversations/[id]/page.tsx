@@ -12,9 +12,9 @@ const STATE_LABEL: Record<string, string> = {
 };
 
 const URGENCY_COLOR: Record<string, string> = {
-  low: "text-gray-500",
-  medium: "text-orange-600",
-  high: "text-red-600",
+  low: "text-white/50",
+  medium: "text-amber-400",
+  high: "text-red-400",
 };
 
 export default async function ConversationPage({
@@ -70,19 +70,19 @@ export default async function ConversationPage({
       {/* Back */}
       <Link
         href="/dashboard/calls"
-        className="mb-4 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800"
+        className="mb-4 inline-flex items-center gap-1 text-sm text-white/50 hover:text-white"
       >
         ← Retour aux appels
       </Link>
 
       {/* Header */}
-      <div className="mb-4 rounded-lg border border-gray-200 bg-white p-4">
+      <div className="mb-4 app-card">
         <div className="flex items-start justify-between">
           <div>
-            <p className="font-mono text-lg font-semibold text-gray-900">
+            <p className="font-mono text-lg font-semibold text-white">
               {conversation.callerNumber}
             </p>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-white/40">
               {new Date(conversation.createdAt).toLocaleString("fr-BE", {
                 day: "2-digit",
                 month: "2-digit",
@@ -101,17 +101,17 @@ export default async function ConversationPage({
             >
               📞 Appeler
             </a>
-            <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs text-blue-700">
+            <span className="pill">
               {STATE_LABEL[conversation.state] ?? conversation.state}
             </span>
           </div>
         </div>
 
         {lead && (
-          <div className="mt-3 border-t border-gray-100 pt-3">
-            <div className="flex flex-wrap gap-3 text-xs">
+          <div className="mt-3 border-t border-white/10 pt-3">
+            <div className="flex flex-wrap items-center gap-3 text-xs">
               {lead.type && (
-                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-gray-600">
+                <span className="rounded-full bg-white/10 px-2 py-0.5 text-white/70">
                   {lead.type}
                 </span>
               )}
@@ -123,19 +123,19 @@ export default async function ConversationPage({
                 </span>
               )}
               {lead.status && (
-                <span className="rounded-full bg-green-50 px-2 py-0.5 text-green-700">
+                <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-emerald-300">
                   {lead.status}
                 </span>
               )}
             </div>
             {lead.summary && (
-              <p className="mt-2 text-sm text-gray-700">{lead.summary}</p>
+              <p className="mt-2 text-sm text-white/80">{lead.summary}</p>
             )}
             {lead.location && (
-              <p className="mt-1 text-xs text-gray-500">📍 {lead.location}</p>
+              <p className="mt-1 text-xs text-white/50">📍 {lead.location}</p>
             )}
             {lead.availability && (
-              <p className="mt-0.5 text-xs text-gray-500">
+              <p className="mt-0.5 text-xs text-white/50">
                 🕐 {lead.availability}
               </p>
             )}
@@ -146,7 +146,7 @@ export default async function ConversationPage({
       {/* Chat */}
       <div className="space-y-2">
         {conversation.messages.length === 0 ? (
-          <p className="text-center text-sm text-gray-400">Aucun message.</p>
+          <p className="text-center text-sm text-white/40">Aucun message.</p>
         ) : (
           conversation.messages.map((msg) => {
             const isOutbound = msg.direction === "outbound";
@@ -158,14 +158,14 @@ export default async function ConversationPage({
                 <div
                   className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm ${
                     isOutbound
-                      ? "rounded-br-sm bg-blue-600 text-white"
-                      : "rounded-bl-sm bg-white text-gray-900 shadow-sm ring-1 ring-gray-200"
+                      ? "rounded-br-sm bg-amber-500 text-neutral-950"
+                      : "rounded-bl-sm bg-white/[0.06] text-white ring-1 ring-white/10"
                   }`}
                 >
                   <p className="whitespace-pre-wrap">{msg.body}</p>
                   <p
                     className={`mt-1 text-right text-[10px] ${
-                      isOutbound ? "text-blue-200" : "text-gray-400"
+                      isOutbound ? "text-neutral-950/60" : "text-white/40"
                     }`}
                   >
                     {new Date(msg.sentAt).toLocaleTimeString("fr-BE", {

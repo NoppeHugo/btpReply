@@ -44,18 +44,16 @@ export default function ClientBilling({
   }
 
   return (
-    <section className="rounded-lg border border-gray-200 bg-white p-5">
-      <h2 className="mb-3 font-semibold text-gray-900">Facturation</h2>
+    <section className="app-card">
+      <h2 className="app-h2 mb-3">Facturation</h2>
 
       <div className="mb-4 flex items-center gap-3">
-        <span className="text-sm text-gray-600">Plan actuel :</span>
-        <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
-          {plan}
-        </span>
+        <span className="text-sm text-white/60">Plan actuel :</span>
+        <span className="pill-amber">{plan}</span>
         {stripeCustomerId ? (
-          <span className="text-xs text-gray-400">{stripeCustomerId}</span>
+          <span className="text-xs text-white/40">{stripeCustomerId}</span>
         ) : (
-          <span className="text-xs text-gray-400">Pas de customer Stripe</span>
+          <span className="text-xs text-white/40">Pas de customer Stripe</span>
         )}
       </div>
 
@@ -64,7 +62,7 @@ export default function ClientBilling({
           <button
             onClick={openPortal}
             disabled={loading === "portal"}
-            className="rounded-md border border-gray-200 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+            className="btn-ghost border border-white/10"
           >
             {loading === "portal" ? "Ouverture…" : "Portail Stripe →"}
           </button>
@@ -72,14 +70,14 @@ export default function ClientBilling({
         <button
           onClick={() => startCheckout("base")}
           disabled={!!loading}
-          className="rounded-md bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+          className="btn-primary"
         >
           {loading === "checkout-base" ? "…" : "Checkout Base"}
         </button>
         <button
           onClick={() => startCheckout("plus")}
           disabled={!!loading}
-          className="rounded-md bg-purple-600 px-3 py-1.5 text-sm text-white hover:bg-purple-700 disabled:opacity-50"
+          className="btn-ghost border border-white/10"
         >
           {loading === "checkout-plus" ? "…" : "Checkout Plus (+39 €)"}
         </button>

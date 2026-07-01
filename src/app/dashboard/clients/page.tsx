@@ -4,9 +4,9 @@ import { db } from "@/lib/db";
 import Link from "next/link";
 
 const STAGE_BADGE: Record<string, string> = {
-  prospect: "bg-yellow-100 text-yellow-700",
-  active: "bg-green-100 text-green-700",
-  paused: "bg-gray-100 text-gray-500",
+  prospect: "bg-amber-500/15 text-amber-300",
+  active: "bg-emerald-500/15 text-emerald-300",
+  paused: "bg-white/10 text-white/50",
 };
 
 export default async function ClientsPage() {
@@ -32,45 +32,40 @@ export default async function ClientsPage() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-gray-900">
-          Clients ({clients.length})
-        </h1>
-        <Link
-          href="/dashboard/clients/new"
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
-        >
+        <h1 className="app-h1">Clients ({clients.length})</h1>
+        <Link href="/dashboard/clients/new" className="btn-primary">
           + Nouveau client
         </Link>
       </div>
 
       {clients.length === 0 ? (
-        <p className="text-sm text-gray-500">Aucun client pour l&apos;instant.</p>
+        <p className="app-muted text-sm">Aucun client pour l&apos;instant.</p>
       ) : (
-        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+        <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+            <thead className="border-b border-white/10 bg-white/[0.02]">
               <tr>
-                <th className="px-4 py-3">Client</th>
-                <th className="px-4 py-3">Statut</th>
-                <th className="px-4 py-3">Appels</th>
-                <th className="px-4 py-3">Leads</th>
-                <th className="px-4 py-3">Utilisateurs</th>
-                <th className="px-4 py-3">Créé</th>
-                <th className="px-4 py-3"></th>
+                <th className="app-th">Client</th>
+                <th className="app-th">Statut</th>
+                <th className="app-th">Appels</th>
+                <th className="app-th">Leads</th>
+                <th className="app-th">Utilisateurs</th>
+                <th className="app-th">Créé</th>
+                <th className="app-th"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-white/5">
               {clients.map((c) => (
-                <tr key={c.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3">
-                    <p className="font-medium text-gray-900">
+                <tr key={c.id} className="transition-colors hover:bg-white/[0.02]">
+                  <td className="app-td">
+                    <p className="font-medium text-white">
                       {c.displayName ?? c.name}
                     </p>
                     {c.displayName && (
-                      <p className="text-xs text-gray-400">{c.name}</p>
+                      <p className="text-xs text-white/40">{c.name}</p>
                     )}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="app-td">
                     <span
                       className={`rounded-full px-2 py-0.5 text-xs ${
                         STAGE_BADGE[c.stage] ?? ""
@@ -79,16 +74,16 @@ export default async function ClientsPage() {
                       {c.stage}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-gray-600">{c._count.calls}</td>
-                  <td className="px-4 py-3 text-gray-600">{c._count.leads}</td>
-                  <td className="px-4 py-3 text-gray-600">{c._count.users}</td>
-                  <td className="px-4 py-3 text-gray-400 text-xs">
+                  <td className="app-td text-white/60">{c._count.calls}</td>
+                  <td className="app-td text-white/60">{c._count.leads}</td>
+                  <td className="app-td text-white/60">{c._count.users}</td>
+                  <td className="app-td text-xs text-white/40">
                     {new Date(c.createdAt).toLocaleDateString("fr-BE")}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="app-td">
                     <Link
                       href={`/dashboard/clients/${c.id}`}
-                      className="text-xs text-blue-600 hover:underline"
+                      className="text-xs font-medium text-amber-400 hover:underline"
                     >
                       Détail →
                     </Link>

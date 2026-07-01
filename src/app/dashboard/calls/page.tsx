@@ -11,9 +11,9 @@ const STATE_LABEL: Record<string, string> = {
 };
 
 const URGENCY_BADGE: Record<string, string> = {
-  low: "bg-gray-100 text-gray-700",
-  medium: "bg-yellow-100 text-yellow-800",
-  high: "bg-red-100 text-red-700",
+  low: "bg-white/10 text-white/60",
+  medium: "bg-amber-500/15 text-amber-300",
+  high: "bg-red-500/15 text-red-400",
 };
 
 export default async function CallsPage() {
@@ -44,37 +44,37 @@ export default async function CallsPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-xl font-semibold text-gray-900">Appels captés</h1>
+      <h1 className="app-h1 mb-6">Appels captés</h1>
 
       {calls.length === 0 ? (
-        <p className="text-sm text-gray-500">Aucun appel pour l&apos;instant.</p>
+        <p className="app-muted text-sm">Aucun appel pour l&apos;instant.</p>
       ) : (
-        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+        <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+            <thead className="border-b border-white/10 bg-white/[0.02]">
               <tr>
-                <th className="px-4 py-3">Numéro</th>
-                {session.user.role === "admin" && <th className="px-4 py-3">Client</th>}
-                <th className="px-4 py-3">Date</th>
-                <th className="px-4 py-3">État conv.</th>
-                <th className="px-4 py-3">Type</th>
-                <th className="px-4 py-3">Urgence</th>
-                <th className="px-4 py-3">Statut lead</th>
-                <th className="px-4 py-3"></th>
+                <th className="app-th">Numéro</th>
+                {session.user.role === "admin" && <th className="app-th">Client</th>}
+                <th className="app-th">Date</th>
+                <th className="app-th">État conv.</th>
+                <th className="app-th">Type</th>
+                <th className="app-th">Urgence</th>
+                <th className="app-th">Statut lead</th>
+                <th className="app-th"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-white/5">
               {calls.map((call) => {
                 const lead = call.conversation?.lead;
                 return (
-                  <tr key={call.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-mono text-xs">{call.callerNumber}</td>
+                  <tr key={call.id} className="transition-colors hover:bg-white/[0.02]">
+                    <td className="app-td font-mono text-xs text-white">{call.callerNumber}</td>
                     {session.user.role === "admin" && (
-                      <td className="px-4 py-3 text-gray-600">
+                      <td className="app-td">
                         {call.client.displayName ?? call.client.name}
                       </td>
                     )}
-                    <td className="px-4 py-3 text-gray-600">
+                    <td className="app-td text-white/60">
                       {new Date(call.calledAt).toLocaleString("fr-BE", {
                         day: "2-digit",
                         month: "2-digit",
@@ -82,15 +82,15 @@ export default async function CallsPage() {
                         minute: "2-digit",
                       })}
                     </td>
-                    <td className="px-4 py-3">
-                      <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs text-blue-700">
+                    <td className="app-td">
+                      <span className="pill">
                         {call.conversation
                           ? (STATE_LABEL[call.conversation.state] ?? call.conversation.state)
                           : "—"}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-600">{lead?.type ?? "—"}</td>
-                    <td className="px-4 py-3">
+                    <td className="app-td text-white/60">{lead?.type ?? "—"}</td>
+                    <td className="app-td">
                       {lead?.urgency ? (
                         <span
                           className={`rounded-full px-2 py-0.5 text-xs ${
@@ -103,12 +103,12 @@ export default async function CallsPage() {
                         "—"
                       )}
                     </td>
-                    <td className="px-4 py-3 text-gray-600">{lead?.status ?? "—"}</td>
-                    <td className="px-4 py-3">
+                    <td className="app-td text-white/60">{lead?.status ?? "—"}</td>
+                    <td className="app-td">
                       {call.conversation && (
                         <Link
                           href={`/dashboard/conversations/${call.conversation.id}`}
-                          className="text-xs text-blue-600 hover:underline"
+                          className="text-xs font-medium text-amber-400 hover:underline"
                         >
                           Voir →
                         </Link>

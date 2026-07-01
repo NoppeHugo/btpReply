@@ -42,13 +42,11 @@ export default function NewClientPage() {
 
   return (
     <div className="mx-auto max-w-lg">
-      <h1 className="mb-6 text-xl font-semibold text-gray-900">
-        Onboarder un nouveau client
-      </h1>
+      <h1 className="app-h1 mb-6">Onboarder un nouveau client</h1>
 
       <form onSubmit={submit} className="space-y-4">
-        <div className="rounded-lg border border-gray-200 bg-white p-5 space-y-4">
-          <h2 className="font-medium text-gray-700">Infos client</h2>
+        <div className="app-card space-y-4">
+          <h2 className="app-h2">Infos client</h2>
 
           <Field label="Nom de l'entreprise *">
             <input
@@ -57,7 +55,7 @@ export default function NewClientPage() {
               value={form.name}
               onChange={(e) => update("name", e.target.value)}
               placeholder="Plomberie Dupont"
-              className="input"
+              className="app-input w-full"
             />
           </Field>
 
@@ -65,7 +63,7 @@ export default function NewClientPage() {
             <select
               value={form.timezone}
               onChange={(e) => update("timezone", e.target.value)}
-              className="input"
+              className="app-input w-full"
             >
               <option value="Europe/Brussels">Europe/Brussels</option>
               <option value="Europe/Paris">Europe/Paris</option>
@@ -74,8 +72,8 @@ export default function NewClientPage() {
           </Field>
         </div>
 
-        <div className="rounded-lg border border-gray-200 bg-white p-5 space-y-4">
-          <h2 className="font-medium text-gray-700">Compte propriétaire</h2>
+        <div className="app-card space-y-4">
+          <h2 className="app-h2">Compte propriétaire</h2>
 
           <Field label="Email *">
             <input
@@ -84,7 +82,7 @@ export default function NewClientPage() {
               value={form.ownerEmail}
               onChange={(e) => update("ownerEmail", e.target.value)}
               placeholder="patron@plomberie-dupont.be"
-              className="input"
+              className="app-input w-full"
             />
           </Field>
 
@@ -96,13 +94,13 @@ export default function NewClientPage() {
               value={form.ownerPassword}
               onChange={(e) => update("ownerPassword", e.target.value)}
               placeholder="8 caractères minimum"
-              className="input"
+              className="app-input w-full"
             />
           </Field>
         </div>
 
-        <div className="rounded-lg border border-gray-200 bg-white p-5 space-y-4">
-          <h2 className="font-medium text-gray-700">Numéro Twilio</h2>
+        <div className="app-card space-y-4">
+          <h2 className="app-h2">Numéro Twilio</h2>
 
           <Field label="Numéro E.164 *">
             <input
@@ -111,13 +109,13 @@ export default function NewClientPage() {
               value={form.phoneNumber}
               onChange={(e) => update("phoneNumber", e.target.value)}
               placeholder="+32499000001"
-              className="input"
+              className="app-input w-full"
             />
           </Field>
         </div>
 
         {error && (
-          <p className="rounded-md bg-red-50 px-4 py-2 text-sm text-red-700">
+          <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-400">
             {error}
           </p>
         )}
@@ -126,34 +124,15 @@ export default function NewClientPage() {
           <button
             type="button"
             onClick={() => router.push("/dashboard/clients")}
-            className="rounded-md border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50"
+            className="btn-ghost border border-white/10"
           >
             Annuler
           </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex-1 rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
-          >
+          <button type="submit" disabled={loading} className="btn-primary flex-1">
             {loading ? "Création…" : "Créer le client"}
           </button>
         </div>
       </form>
-
-      <style jsx>{`
-        .input {
-          width: 100%;
-          border: 1px solid #e5e7eb;
-          border-radius: 6px;
-          padding: 6px 12px;
-          font-size: 14px;
-          outline: none;
-        }
-        .input:focus {
-          ring: 1px solid #3b82f6;
-          border-color: #3b82f6;
-        }
-      `}</style>
     </div>
   );
 }
@@ -167,9 +146,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="mb-1 block text-sm font-medium text-gray-600">
-        {label}
-      </label>
+      <label className="app-label">{label}</label>
       {children}
     </div>
   );

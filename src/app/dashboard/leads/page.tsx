@@ -26,15 +26,15 @@ const STATUS_OPTIONS = [
 ];
 
 const STATUS_BADGE: Record<string, string> = {
-  new: "bg-blue-100 text-blue-700",
-  to_callback: "bg-yellow-100 text-yellow-800",
-  done: "bg-green-100 text-green-700",
+  new: "bg-sky-500/15 text-sky-300",
+  to_callback: "bg-amber-500/15 text-amber-300",
+  done: "bg-emerald-500/15 text-emerald-300",
 };
 
 const URGENCY_BADGE: Record<string, string> = {
-  low: "bg-gray-100 text-gray-600",
-  medium: "bg-orange-100 text-orange-700",
-  high: "bg-red-100 text-red-700",
+  low: "bg-white/10 text-white/60",
+  medium: "bg-amber-500/15 text-amber-300",
+  high: "bg-red-500/15 text-red-400",
 };
 
 export default function LeadsPage() {
@@ -66,7 +66,7 @@ export default function LeadsPage() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-gray-900">Leads</h1>
+        <h1 className="app-h1">Leads</h1>
         <div className="flex gap-2">
           {STATUS_OPTIONS.map((opt) => (
             <button
@@ -74,8 +74,8 @@ export default function LeadsPage() {
               onClick={() => setFilter(opt.value)}
               className={`rounded-full px-3 py-1 text-sm transition-colors ${
                 filter === opt.value
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  ? "bg-amber-500 font-semibold text-neutral-950"
+                  : "border border-white/10 bg-white/[0.03] text-white/60 hover:bg-white/[0.06]"
               }`}
             >
               {opt.label}
@@ -84,21 +84,18 @@ export default function LeadsPage() {
         </div>
       </div>
 
-      {isPending && <p className="mb-4 text-sm text-gray-400">Chargement…</p>}
+      {isPending && <p className="mb-4 text-sm text-white/40">Chargement…</p>}
 
       {!data ? null : data.leads.length === 0 ? (
-        <p className="text-sm text-gray-500">Aucun lead pour ce filtre.</p>
+        <p className="app-muted text-sm">Aucun lead pour ce filtre.</p>
       ) : (
         <div className="space-y-3">
           {data.leads.map((lead) => (
-            <div
-              key={lead.id}
-              className="rounded-lg border border-gray-200 bg-white p-4"
-            >
+            <div key={lead.id} className="app-card-sm">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
                   <div className="mb-1 flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-sm font-medium">
+                    <span className="font-mono text-sm font-medium text-white">
                       {lead.callerNumber}
                     </span>
                     {lead.urgency && (
@@ -111,11 +108,11 @@ export default function LeadsPage() {
                       </span>
                     )}
                     {lead.type && (
-                      <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+                      <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-white/60">
                         {lead.type}
                       </span>
                     )}
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-white/30">
                       {new Date(lead.createdAt).toLocaleString("fr-BE", {
                         day: "2-digit",
                         month: "2-digit",
@@ -125,19 +122,19 @@ export default function LeadsPage() {
                     </span>
                   </div>
                   {lead.summary && (
-                    <p className="text-sm text-gray-700">{lead.summary}</p>
+                    <p className="text-sm text-white/80">{lead.summary}</p>
                   )}
                   {lead.location && (
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-1 text-xs text-white/50">
                       📍 {lead.location}
                     </p>
                   )}
                   {lead.availability && (
-                    <p className="mt-0.5 text-xs text-gray-500">
+                    <p className="mt-0.5 text-xs text-white/50">
                       🕐 {lead.availability}
                     </p>
                   )}
-                  <p className="mt-1 text-xs text-gray-400">
+                  <p className="mt-1 text-xs text-white/30">
                     {lead.client.displayName ?? lead.client.name}
                   </p>
                 </div>
@@ -158,7 +155,7 @@ export default function LeadsPage() {
               </div>
             </div>
           ))}
-          <p className="text-right text-xs text-gray-400">
+          <p className="text-right text-xs text-white/30">
             {data.total} lead{data.total !== 1 ? "s" : ""} au total
           </p>
         </div>

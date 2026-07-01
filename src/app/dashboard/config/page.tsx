@@ -107,15 +107,15 @@ function BusinessHoursSection() {
   }
 
   return (
-    <section className="rounded-lg border border-gray-200 bg-white p-5">
-      <h2 className="mb-4 font-semibold text-gray-900">Heures d&apos;ouverture</h2>
+    <section className="app-card">
+      <h2 className="app-h2 mb-4">Heures d&apos;ouverture</h2>
       <div className="space-y-2">
         {hours.map((h, i) => (
           <div key={h.dayOfWeek} className="flex items-center gap-3">
-            <span className="w-24 text-sm text-gray-600">
+            <span className="w-24 text-sm text-white/60">
               {DAYS[i]?.label}
             </span>
-            <label className="flex items-center gap-1.5 text-sm text-gray-500">
+            <label className="flex items-center gap-1.5 text-sm text-white/50">
               <input
                 type="checkbox"
                 checked={h.closed}
@@ -130,14 +130,14 @@ function BusinessHoursSection() {
                   type="time"
                   value={h.openTime}
                   onChange={(e) => updateDay(i, { openTime: e.target.value })}
-                  className="rounded border border-gray-200 px-2 py-1 text-sm"
+                  className="app-input"
                 />
-                <span className="text-sm text-gray-400">–</span>
+                <span className="text-sm text-white/40">–</span>
                 <input
                   type="time"
                   value={h.closeTime}
                   onChange={(e) => updateDay(i, { closeTime: e.target.value })}
-                  className="rounded border border-gray-200 px-2 py-1 text-sm"
+                  className="app-input"
                 />
               </>
             )}
@@ -147,7 +147,7 @@ function BusinessHoursSection() {
       <button
         onClick={save}
         disabled={saving}
-        className="mt-4 rounded-md bg-blue-600 px-4 py-1.5 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+        className="btn-primary mt-4"
       >
         {saved ? "Sauvegardé ✓" : saving ? "Sauvegarde…" : "Sauvegarder"}
       </button>
@@ -197,9 +197,9 @@ function WhitelistSection() {
   }
 
   return (
-    <section className="rounded-lg border border-gray-200 bg-white p-5">
-      <h2 className="mb-1 font-semibold text-gray-900">Numéros exclus</h2>
-      <p className="mb-4 text-xs text-gray-500">
+    <section className="app-card">
+      <h2 className="app-h2 mb-1">Numéros exclus</h2>
+      <p className="mb-4 text-xs text-white/50">
         Ces numéros ne recevront jamais de SMS automatique (ex. concurrents, fournisseurs).
       </p>
 
@@ -209,38 +209,38 @@ function WhitelistSection() {
           placeholder="+32470123456"
           value={number}
           onChange={(e) => setNumber(e.target.value)}
-          className="flex-1 rounded border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="app-input flex-1"
         />
         <input
           type="text"
           placeholder="Label (optionnel)"
           value={label}
           onChange={(e) => setLabel(e.target.value)}
-          className="w-40 rounded border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="app-input w-40"
         />
         <button
           onClick={add}
           disabled={adding || !number.trim()}
-          className="rounded-md bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+          className="btn-primary"
         >
           Ajouter
         </button>
       </div>
 
       {entries.length === 0 ? (
-        <p className="text-sm text-gray-400">Aucun numéro exclu.</p>
+        <p className="text-sm text-white/40">Aucun numéro exclu.</p>
       ) : (
         <ul className="space-y-1">
           {entries.map((e) => (
             <li
               key={e.id}
-              className="flex items-center justify-between rounded-md bg-gray-50 px-3 py-2 text-sm"
+              className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm"
             >
-              <span className="font-mono">{e.number}</span>
+              <span className="font-mono text-white">{e.number}</span>
               {e.label && (
-                <span className="ml-2 text-gray-500">
+                <span className="ml-2 text-white/50">
                   {e.label === "opted_out" ? (
-                    <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-700">
+                    <span className="rounded-full bg-red-500/15 px-2 py-0.5 text-xs text-red-400">
                       STOP opt-out
                     </span>
                   ) : (
@@ -251,7 +251,7 @@ function WhitelistSection() {
               {e.label !== "opted_out" && (
                 <button
                   onClick={() => remove(e.id)}
-                  className="ml-auto text-xs text-red-500 hover:text-red-700"
+                  className="ml-auto text-xs text-red-400 hover:text-red-300"
                 >
                   Supprimer
                 </button>
@@ -315,9 +315,9 @@ function TemplatesSection() {
   }
 
   return (
-    <section className="rounded-lg border border-gray-200 bg-white p-5">
-      <h2 className="mb-1 font-semibold text-gray-900">Modèles de SMS</h2>
-      <p className="mb-4 text-xs text-gray-500">
+    <section className="app-card">
+      <h2 className="app-h2 mb-1">Modèles de SMS</h2>
+      <p className="mb-4 text-xs text-white/50">
         Laissez vide pour utiliser le modèle par défaut. N&apos;utilisez jamais
         les mots «&nbsp;bot&nbsp;», «&nbsp;IA&nbsp;» ou «&nbsp;automatique&nbsp;».
       </p>
@@ -325,11 +325,11 @@ function TemplatesSection() {
       <div className="space-y-6">
         {TEMPLATE_KEYS.map(({ key, label }) => (
           <div key={key}>
-            <p className="mb-2 text-sm font-medium text-gray-700">{label}</p>
+            <p className="mb-2 text-sm font-medium text-white/70">{label}</p>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {(["fr", "nl"] as const).map((lang) => (
                 <div key={lang}>
-                  <label className="mb-1 block text-xs font-medium text-gray-500">
+                  <label className="mb-1 block text-xs font-medium text-white/50">
                     {lang === "fr" ? "Français" : "Nederlands"}
                   </label>
                   <textarea
@@ -337,7 +337,7 @@ function TemplatesSection() {
                     value={templates[key]?.[lang] ?? ""}
                     onChange={(e) => update(key, lang, e.target.value)}
                     placeholder="Laissez vide pour utiliser le modèle par défaut…"
-                    className="w-full rounded border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="app-input w-full"
                   />
                 </div>
               ))}
@@ -349,7 +349,7 @@ function TemplatesSection() {
       <button
         onClick={save}
         disabled={saving}
-        className="mt-4 rounded-md bg-blue-600 px-4 py-1.5 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+        className="btn-primary mt-4"
       >
         {saved ? "Sauvegardé ✓" : saving ? "Sauvegarde…" : "Sauvegarder"}
       </button>
@@ -420,15 +420,15 @@ function SettingsSection() {
   }
 
   return (
-    <section className="rounded-lg border border-gray-200 bg-white p-5">
-      <h2 className="mb-1 font-semibold text-gray-900">Paramètres</h2>
-      <p className="mb-4 text-xs text-gray-500">
+    <section className="app-card">
+      <h2 className="app-h2 mb-1">Paramètres</h2>
+      <p className="mb-4 text-xs text-white/50">
         Délai avant l&apos;envoi du premier SMS et coordonnées de réception des alertes.
       </p>
 
       <div className="space-y-4">
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
+          <label className="mb-1 block text-sm font-medium text-white/70">
             Délai avant le premier SMS (secondes)
           </label>
           <input
@@ -442,15 +442,15 @@ function SettingsSection() {
                 initialSmsDelaySec: Number(e.target.value),
               }))
             }
-            className="w-32 rounded border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="app-input w-32"
           />
-          <p className="mt-1 text-[11px] text-gray-400">
+          <p className="mt-1 text-[11px] text-white/40">
             Laisser le temps de décrocher soi-même avant l&apos;envoi (défaut : 30 s).
           </p>
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
+          <label className="mb-1 block text-sm font-medium text-white/70">
             Email de réception des alertes
           </label>
           <input
@@ -460,15 +460,15 @@ function SettingsSection() {
             onChange={(e) =>
               setSettings((s) => ({ ...s, alertEmail: e.target.value }))
             }
-            className="w-full max-w-sm rounded border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="app-input w-full max-w-sm"
           />
-          <p className="mt-1 text-[11px] text-gray-400">
+          <p className="mt-1 text-[11px] text-white/40">
             Vide = envoyé au(x) compte(s) propriétaire(s) du client.
           </p>
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
+          <label className="mb-1 block text-sm font-medium text-white/70">
             Numéro pour alerte SMS (optionnel)
           </label>
           <input
@@ -478,9 +478,9 @@ function SettingsSection() {
             onChange={(e) =>
               setSettings((s) => ({ ...s, alertPhone: e.target.value }))
             }
-            className="w-full max-w-sm rounded border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="app-input w-full max-w-sm"
           />
-          <p className="mt-1 text-[11px] text-gray-400">
+          <p className="mt-1 text-[11px] text-white/40">
             Si renseigné, un SMS d&apos;alerte est aussi envoyé à ce numéro pour chaque lead.
           </p>
         </div>
@@ -491,7 +491,7 @@ function SettingsSection() {
       <button
         onClick={save}
         disabled={saving}
-        className="mt-4 rounded-md bg-blue-600 px-4 py-1.5 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+        className="btn-primary mt-4"
       >
         {saved ? "Sauvegardé ✓" : saving ? "Sauvegarde…" : "Sauvegarder"}
       </button>
@@ -502,7 +502,7 @@ function SettingsSection() {
 export default function ConfigPage() {
   return (
     <div>
-      <h1 className="mb-6 text-xl font-semibold text-gray-900">Configuration</h1>
+      <h1 className="mb-6 app-h1">Configuration</h1>
       <div className="space-y-6">
         <SettingsSection />
         <BusinessHoursSection />

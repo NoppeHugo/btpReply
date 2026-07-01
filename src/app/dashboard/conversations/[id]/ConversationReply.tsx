@@ -57,16 +57,16 @@ export function ConversationReply({
   }
 
   return (
-    <div className="mt-4 rounded-lg border border-gray-200 bg-white p-4">
+    <div className="mt-4 app-card">
       {/* Bandeau de mode */}
       <div className="mb-3 flex items-center justify-between">
         {autopilot ? (
-          <span className="inline-flex items-center gap-1.5 text-xs text-gray-500">
+          <span className="inline-flex items-center gap-1.5 text-xs text-white/50">
             <span className="size-2 rounded-full bg-emerald-500" />
             Réponses automatiques activées
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-700">
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-400">
             <span className="size-2 rounded-full bg-amber-500" />
             Vous avez repris la main
           </span>
@@ -75,7 +75,7 @@ export function ConversationReply({
           <button
             onClick={() => setAutopilot(true)}
             disabled={sending}
-            className="text-xs text-blue-600 hover:underline disabled:opacity-50"
+            className="text-xs text-amber-400 hover:underline disabled:opacity-50"
           >
             Redonner la main au secrétariat
           </button>
@@ -91,22 +91,22 @@ export function ConversationReply({
           }}
           rows={2}
           placeholder="Répondre au client par SMS…"
-          className="flex-1 resize-none rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="app-input flex-1 resize-none"
         />
         <button
           onClick={send}
           disabled={sending || !body.trim()}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+          className="btn-primary"
         >
           {sending ? "…" : "Envoyer"}
         </button>
       </div>
       {autopilot && (
-        <p className="mt-2 text-[11px] text-gray-400">
+        <p className="mt-2 text-[11px] text-white/40">
           Envoyer un message met les réponses automatiques en pause pour cette conversation.
         </p>
       )}
-      {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
     </div>
   );
 }
