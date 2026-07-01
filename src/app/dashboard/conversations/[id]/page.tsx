@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { redirect, notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import Link from "next/link";
+import { ConversationReply } from "./ConversationReply";
 
 const STATE_LABEL: Record<string, string> = {
   open: "En cours",
@@ -34,6 +35,7 @@ export default async function ConversationPage({
       callerNumber: true,
       state: true,
       language: true,
+      autopilot: true,
       createdAt: true,
       lead: {
         select: {
@@ -92,9 +94,17 @@ export default async function ConversationPage({
               {conversation.language.toUpperCase()}
             </p>
           </div>
-          <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs text-blue-700">
-            {STATE_LABEL[conversation.state] ?? conversation.state}
-          </span>
+          <div className="flex items-center gap-2">
+            <a
+              href={`tel:${conversation.callerNumber}`}
+              className="inline-flex items-center gap-1.5 rounded-md bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700"
+            >
+              📞 Appeler
+            </a>
+            <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs text-blue-700">
+              {STATE_LABEL[conversation.state] ?? conversation.state}
+            </span>
+          </div>
         </div>
 
         {lead && (
@@ -169,6 +179,12 @@ export default async function ConversationPage({
           })
         )}
       </div>
+
+      {/* Réponse manuelle + bascule auto/manuel */}
+      <ConversationReply
+        conversationId={conversation.id}
+        autopilot={conversation.autopilot}
+      />
     </div>
   );
 }

@@ -359,11 +359,152 @@ function TemplatesSection() {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
+// ── Section: Paramètres (délai SMS + alertes) ─────────────────────────────────
+
+type Settings = {
+  initialSmsDelaySec: number;
+  alertEmail: string | null;
+  alertPhone: string | null;
+};
+
+function SettingsSection() {
+  const [settings, setSettings] = useState<Settings>({
+    initialSmsDelaySec: 30,
+    alertEmail: "",
+    alertPhone: "",
+  });
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/v1/config/settings")
+      .then((r) => r.json())
+      .then((j) => {
+        const d = (j?.data ?? j) as Settings;
+        if (d && typeof d.initialSmsDelaySec === "number") {
+          setSettings({
+            initialSmsDelaySec: d.initialSmsDelaySec,
+            alertEmail: d.alertEmail ?? "",
+            alertPhone: d.alertPhone ?? "",
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  async function save() {
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/v1/config/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          initialSmsDelaySec: Number(settings.initialSmsDelaySec),
+          alertEmail: settings.alertEmail || "",
+          alertPhone: settings.alertPhone || "",
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error ?? "Échec de la sauvegarde");
+      }
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erreur");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <section className="rounded-lg border border-gray-200 bg-white p-5">
+      <h2 className="mb-1 font-semibold text-gray-900">Paramètres</h2>
+      <p className="mb-4 text-xs text-gray-500">
+        Délai avant l&apos;envoi du premier SMS et coordonnées de réception des alertes.
+      </p>
+
+      <div className="space-y-4">
+        <div>
+          <label className="mb-1 block text-sm font-medium text-gray-700">
+            Délai avant le premier SMS (secondes)
+          </label>
+          <input
+            type="number"
+            min={0}
+            max={600}
+            value={settings.initialSmsDelaySec}
+            onChange={(e) =>
+              setSettings((s) => ({
+                ...s,
+                initialSmsDelaySec: Number(e.target.value),
+              }))
+            }
+            className="w-32 rounded border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+          <p className="mt-1 text-[11px] text-gray-400">
+            Laisser le temps de décrocher soi-même avant l&apos;envoi (défaut : 30 s).
+          </p>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-gray-700">
+            Email de réception des alertes
+          </label>
+          <input
+            type="email"
+            placeholder="vous@exemple.be"
+            value={settings.alertEmail ?? ""}
+            onChange={(e) =>
+              setSettings((s) => ({ ...s, alertEmail: e.target.value }))
+            }
+            className="w-full max-w-sm rounded border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+          <p className="mt-1 text-[11px] text-gray-400">
+            Vide = envoyé au(x) compte(s) propriétaire(s) du client.
+          </p>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-gray-700">
+            Numéro pour alerte SMS (optionnel)
+          </label>
+          <input
+            type="tel"
+            placeholder="+32470123456"
+            value={settings.alertPhone ?? ""}
+            onChange={(e) =>
+              setSettings((s) => ({ ...s, alertPhone: e.target.value }))
+            }
+            className="w-full max-w-sm rounded border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+          <p className="mt-1 text-[11px] text-gray-400">
+            Si renseigné, un SMS d&apos;alerte est aussi envoyé à ce numéro pour chaque lead.
+          </p>
+        </div>
+      </div>
+
+      {error && <p className="mt-3 text-xs text-red-600">{error}</p>}
+
+      <button
+        onClick={save}
+        disabled={saving}
+        className="mt-4 rounded-md bg-blue-600 px-4 py-1.5 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+      >
+        {saved ? "Sauvegardé ✓" : saving ? "Sauvegarde…" : "Sauvegarder"}
+      </button>
+    </section>
+  );
+}
+
 export default function ConfigPage() {
   return (
     <div>
       <h1 className="mb-6 text-xl font-semibold text-gray-900">Configuration</h1>
       <div className="space-y-6">
+        <SettingsSection />
         <BusinessHoursSection />
         <WhitelistSection />
         <TemplatesSection />

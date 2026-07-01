@@ -62,13 +62,21 @@ export async function handleIncomingCall(
  * - Skip si le numéro est en liste blanche (P5-T1)
  * - SMS d'horaires si hors ouverture (P5-T3)
  */
-export function scheduleInitialSms(
+export async function scheduleInitialSms(
   callId: string,
   clientId: string,
   callerNumber: string,
   fromNumber: string
-): void {
-  const delayMs = Number(process.env.INITIAL_SMS_DELAY_MS ?? 30_000);
+): Promise<void> {
+  // Délai configurable par client (secondes) ; fallback env ou 30 s.
+  const client = await db.client.findUnique({
+    where: { id: clientId },
+    select: { initialSmsDelaySec: true },
+  });
+  const delaySec =
+    client?.initialSmsDelaySec ??
+    Number(process.env.INITIAL_SMS_DELAY_MS ?? 30_000) / 1000;
+  const delayMs = delaySec * 1000;
 
   setTimeout(async () => {
     try {

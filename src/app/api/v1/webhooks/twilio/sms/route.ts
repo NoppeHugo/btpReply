@@ -97,6 +97,15 @@ export async function POST(req: NextRequest) {
   const detectedLang = detectLanguage(messageBody);
   await updateConversationLanguage(conversation.id, detectedLang, clientId);
 
+  // ── Reprise manuelle : si l'artisan a la main, on n'active pas le bot ──
+  if (!conversation.autopilot) {
+    logger.info(
+      { conversationId: conversation.id, clientId },
+      "Conversation en mode manuel — message enregistré, qualification auto ignorée"
+    );
+    return new Response("", { status: 200 });
+  }
+
   logger.info(
     { conversationId: conversation.id, clientId, callerNumber, lang: detectedLang },
     "SMS entrant enregistré — lancement qualification"

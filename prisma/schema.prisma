@@ -74,6 +74,10 @@ model Client {
   timezone         String      @default("Europe/Brussels")
   stripeCustomerId String?
   plan             String      @default("base")
+  // Paramètres configurables par l'artisan
+  initialSmsDelaySec Int       @default(30)
+  alertEmail         String?
+  alertPhone         String?
   createdAt        DateTime    @default(now())
   updatedAt        DateTime    @updatedAt
 
@@ -165,6 +169,8 @@ model Conversation {
   state        ConversationState @default(open)
   turnCount    Int               @default(0)
   language     String            @default("fr")
+  // false = l'artisan a repris la main : la qualification auto est en pause
+  autopilot    Boolean           @default(true)
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
 

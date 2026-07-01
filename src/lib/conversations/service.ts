@@ -66,7 +66,7 @@ export async function recordMessage(params: RecordMessageParams): Promise<string
 export async function findOpenConversationByCallerNumber(
   clientId: string,
   callerNumber: string
-): Promise<{ id: string; callId: string; turnCount: number } | null> {
+): Promise<{ id: string; callId: string; turnCount: number; autopilot: boolean } | null> {
   return db.conversation.findFirst({
     where: {
       clientId,
@@ -74,7 +74,7 @@ export async function findOpenConversationByCallerNumber(
       state: { in: ["open", "qualified"] },
     },
     orderBy: { createdAt: "desc" },
-    select: { id: true, callId: true, turnCount: true },
+    select: { id: true, callId: true, turnCount: true, autopilot: true },
   });
 }
 
