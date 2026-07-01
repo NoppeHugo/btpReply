@@ -35,13 +35,13 @@ const BEATS: Beat[] = [
     screen: "lost",
     time: "le lendemain",
     title: "Déjà chez le concurrent qui a décroché.",
-    body: "Marc ne perd pas des appels. Il perd des chantiers — sans jamais savoir combien. Un devis salle de bain manqué, c'est parfois 6 000 € envolés.",
+    body: "Marc ne perd pas des appels. Il perd des chantiers, sans jamais savoir combien. Un devis salle de bain manqué, c'est parfois 6 000 € envolés.",
   },
   {
     screen: "saved",
     time: "avec Rappl",
     title: "Sauf que cette fois, quelqu'un a répondu.",
-    body: "Rappl envoie un SMS au nom de Marc, cerne le besoin (fuite, urgent, Tournai) et le prévient. Le client est rappelé le soir même — le chantier est sauvé.",
+    body: "Rappl envoie un SMS au nom de Marc, cerne le besoin (fuite, urgent, Tournai) et le prévient. Le client est rappelé le soir même : le chantier est sauvé.",
   },
 ];
 
@@ -144,7 +144,7 @@ export function StoryScrolly() {
         })}
       </div>
 
-      {/* ---------- Téléphone épinglé — MOBILE (grand, centré) ---------- */}
+      {/* ---------- Téléphone épinglé : MOBILE (grand, centré) ---------- */}
       <div className="pointer-events-none absolute inset-0 lg:hidden">
         <div className="sticky top-0 flex h-[100svh] flex-col items-center justify-center gap-5 py-10">
           {/* Taille bornée par la largeur ET la hauteur visible pour ne jamais déborder.
@@ -160,7 +160,7 @@ export function StoryScrolly() {
         </div>
       </div>
 
-      {/* ---------- Téléphone épinglé — DESKTOP (centré) ---------- */}
+      {/* ---------- Téléphone épinglé : DESKTOP (centré) ---------- */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 top-0 hidden lg:block"

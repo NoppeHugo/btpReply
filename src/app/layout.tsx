@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Rappl — Ne perdez plus un chantier sur un appel manqué",
+    default: "Rappl : ne perdez plus un chantier sur un appel manqué",
     template: "%s · Rappl",
   },
   description:

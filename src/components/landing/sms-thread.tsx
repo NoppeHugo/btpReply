@@ -8,7 +8,7 @@ type Bubble = {
 
 /**
  * Reconstitution d'un échange SMS réel : le secrétariat répond au nom de
- * l'artisan et qualifie le besoin. Aucun vocabulaire « IA / robot » — le fil
+ * l'artisan et qualifie le besoin. Aucun vocabulaire « IA / robot », le fil
  * doit ressembler à un humain (cf. agents.md §1).
  */
 const THREAD: Bubble[] = [
@@ -38,7 +38,7 @@ const THREAD: Bubble[] = [
   {
     from: "pro",
     text:
-      "Parfait, je transmets tout de suite à M. Dupont — il vous rappelle avant 17 h pour caler le passage. Bonne journée 🙏",
+      "Parfait, je transmets tout de suite à M. Dupont, il vous rappelle avant 17 h pour caler le passage. Bonne journée 🙏",
     time: "15:06",
   },
 ];

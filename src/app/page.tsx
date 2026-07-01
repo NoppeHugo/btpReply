@@ -25,7 +25,7 @@ import { SmsThread } from "@/components/landing/sms-thread";
 import { StoryScrolly } from "@/components/landing/story-scrolly";
 
 export const metadata: Metadata = {
-  title: "Rappl — Ne perdez plus un seul chantier sur un appel manqué",
+  title: "Rappl : ne perdez plus un seul chantier sur un appel manqué",
   description:
     "Vous êtes sur le chantier, le téléphone sonne dans le vide. Rappl répond par SMS en votre nom, qualifie le besoin et vous envoie un client prêt à être rappelé. Pour les artisans de l'Eurométropole.",
 };
@@ -35,7 +35,7 @@ const STEPS = [
     icon: PhoneMissed,
     label: "Appel manqué détecté",
     title: "Un appel bascule ? On le voit à la seconde.",
-    body: "Dès qu'un appel n'aboutit pas — vous êtes sur un toit, en réunion, hors horaires — Rappl le repère instantanément. Aucun numéro ne tombe dans l'oubli.",
+    body: "Dès qu'un appel n'aboutit pas (vous êtes sur un toit, en réunion, hors horaires), Rappl le repère instantanément. Aucun numéro ne tombe dans l'oubli.",
   },
   {
     icon: MessageSquareText,
@@ -47,7 +47,7 @@ const STEPS = [
     icon: ClipboardCheck,
     label: "Le besoin est qualifié",
     title: "On comprend la demande avant que vous rappeliez.",
-    body: "Type de travaux, urgence, commune, disponibilité : la conversation cerne l'essentiel. Vous rappelez en connaissant déjà le chantier — plus de temps perdu.",
+    body: "Type de travaux, urgence, commune, disponibilité : la conversation cerne l'essentiel. Vous rappelez en connaissant déjà le chantier, plus de temps perdu.",
   },
   {
     icon: BellRing,
@@ -172,7 +172,7 @@ export default function Home() {
             <Reveal delay={160}>
               <p className="mx-auto mt-6 max-w-xl text-pretty text-lg leading-relaxed text-white/60">
                 Rappl répond par SMS à votre place, en votre nom, qualifie le
-                besoin et vous renvoie un client prêt à être rappelé — sans que
+                besoin et vous renvoie un client prêt à être rappelé, sans que
                 vous quittiez votre chantier.
               </p>
             </Reveal>
@@ -204,7 +204,7 @@ export default function Home() {
             <Reveal delay={300}>
               <p className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-xs text-white/60 sm:text-sm">
                 <ShieldCheck className="size-4 shrink-0 text-amber-400" />
-                1er mois remboursé si on ne vous rapporte aucun client — sans
+                1er mois remboursé si on ne vous rapporte aucun client, sans
                 engagement.
               </p>
             </Reveal>
@@ -243,7 +243,7 @@ export default function Home() {
                 Le problème
               </p>
               <h2 className="mt-4 text-balance text-3xl font-semibold tracking-tight sm:text-5xl">
-                D&apos;abord, l&apos;histoire de Marc — un vendredi ordinaire.
+                D&apos;abord, l&apos;histoire de Marc, un vendredi ordinaire.
               </h2>
               <p className="mx-auto mt-5 max-w-lg text-lg text-white/50">
                 Vous allez la reconnaître. Elle se rejoue sur tous les chantiers,
@@ -282,7 +282,7 @@ export default function Home() {
                   La solution
                 </p>
                 <h2 className="mt-4 text-balance text-3xl font-semibold tracking-tight sm:text-5xl">
-                  Vous ne pouvez pas décrocher. Nous, si — en votre nom.
+                  Vous ne pouvez pas décrocher. Nous, si. En votre nom.
                 </h2>
                 <p className="mt-5 text-lg text-neutral-500">
                   Rappl transforme un appel manqué en client qualifié, en
@@ -451,7 +451,7 @@ export default function Home() {
                 </p>
                 <p className="mx-auto mt-4 max-w-md text-white/60">
                   qui sonnent dans le vide et repartent chez le concurrent. Rappl
-                  en récupère la plus grande partie — pour une fraction de ce
+                  en récupère la plus grande partie, pour une fraction de ce
                   montant, et sans embaucher personne.
                 </p>
               </div>
@@ -471,14 +471,14 @@ export default function Home() {
                   Le risque est pour nous, pas pour vous.
                 </h2>
                 <p className="mx-auto mt-4 max-w-xl text-pretty text-white/60 sm:text-lg">
-                  Vous payez dès le premier jour — mais si Rappl ne vous capte
+                  Vous payez dès le premier jour, mais si Rappl ne vous capte
                   aucun nouveau client le premier mois, on vous rembourse
                   intégralement. Pas de piège, pas d&apos;engagement.
                 </p>
                 <ul className="mx-auto mt-8 grid max-w-2xl gap-3 text-left sm:grid-cols-3">
                   {[
                     "Mise en place offerte",
-                    "Sans engagement — résiliable à tout moment",
+                    "Sans engagement, résiliable à tout moment",
                     "Remboursé si zéro client capté le 1er mois",
                   ].map((t) => (
                     <li

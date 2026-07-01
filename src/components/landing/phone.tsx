@@ -145,7 +145,7 @@ export function StoryScreen({ screen }: { screen: PhoneScreen }) {
     );
   }
 
-  // saved — ce que fait Rappl
+  // saved : ce que fait Rappl
   return (
     <div className="flex h-full flex-col gap-3 bg-gradient-to-b from-emerald-950/40 to-neutral-950 px-4 py-10 text-white">
       <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-emerald-400">
@@ -169,7 +169,7 @@ export function StoryScreen({ screen }: { screen: PhoneScreen }) {
         </div>
         <div className="flex items-center gap-2 text-[13px]">
           <Clock className="size-4 shrink-0 text-emerald-400" />
-          <span>Urgent — aujourd&apos;hui</span>
+          <span>Urgent, aujourd&apos;hui</span>
         </div>
         <div className="flex items-center gap-2 text-[13px]">
           <MapPin className="size-4 shrink-0 text-emerald-400" />
