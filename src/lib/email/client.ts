@@ -1,6 +1,14 @@
 import nodemailer, { type Transporter } from "nodemailer";
+import { logger } from "@/lib/logger";
 
 let _transporter: Transporter | null = null;
+
+/** Email actif seulement si les 3 variables SMTP sont présentes. */
+export function isEmailConfigured(): boolean {
+  return Boolean(
+    process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS
+  );
+}
 
 /**
  * Transport SMTP (Gmail par défaut).
@@ -49,6 +57,15 @@ type SendEmailParams = {
 export async function sendEmail(
   params: SendEmailParams
 ): Promise<{ error: { message: string } | null }> {
+  // SMTP non configuré : on ne bloque pas le flux (lead créé quand même), on log.
+  if (!isEmailConfigured()) {
+    logger.warn(
+      { to: params.to, subject: params.subject },
+      "SMTP non configuré — email ignoré"
+    );
+    return { error: null };
+  }
+
   try {
     await getTransporter().sendMail({
       from: params.from ?? FROM_EMAIL,
