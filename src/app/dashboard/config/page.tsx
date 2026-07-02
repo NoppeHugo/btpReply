@@ -111,7 +111,7 @@ function BusinessHoursSection() {
       <h2 className="app-h2 mb-4">Heures d&apos;ouverture</h2>
       <div className="space-y-2">
         {hours.map((h, i) => (
-          <div key={h.dayOfWeek} className="flex items-center gap-3">
+          <div key={h.dayOfWeek} className="flex flex-wrap items-center gap-3">
             <span className="w-24 text-sm text-white/60">
               {DAYS[i]?.label}
             </span>
@@ -203,7 +203,7 @@ function WhitelistSection() {
         Ces numéros ne recevront jamais de SMS automatique (ex. concurrents, fournisseurs).
       </p>
 
-      <div className="mb-4 flex gap-2">
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row">
         <input
           type="tel"
           placeholder="+32470123456"
@@ -216,7 +216,7 @@ function WhitelistSection() {
           placeholder="Label (optionnel)"
           value={label}
           onChange={(e) => setLabel(e.target.value)}
-          className="app-input w-40"
+          className="app-input sm:w-40"
         />
         <button
           onClick={add}

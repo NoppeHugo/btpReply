@@ -1,6 +1,7 @@
 import { getTwilioClient } from "@/lib/twilio/client";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { enforceSingleSegment, computeSegments } from "./segments";
 
 interface SendSmsParams {
   to: string;
@@ -9,10 +10,19 @@ interface SendSmsParams {
 }
 
 export async function sendSms(params: SendSmsParams): Promise<string> {
+  // Garde-fou coût : assainir en GSM-7 et garantir 1 seul segment facturé.
+  const { body, truncated } = enforceSingleSegment(params.body);
+  if (truncated) {
+    logger.warn(
+      { to: params.to, original: computeSegments(params.body) },
+      "SMS sortant tronqué pour tenir en 1 segment"
+    );
+  }
+
   const msg = await getTwilioClient().messages.create({
     to: params.to,
     from: params.from,
-    body: params.body,
+    body,
   });
   logger.info({ sid: msg.sid, to: params.to }, "SMS envoyé");
   return msg.sid;
@@ -39,11 +49,12 @@ export async function buildInitialSmsBody(
 
   if (template) return template.body;
 
+  // Gabarits courts : tiennent en 1 segment SMS, nom d'entreprise inclus.
   if (language === "nl") {
-    return `Goedag, u spreekt met ${client.name}. U heeft ons gebeld maar we konden niet opnemen. Hoe kunnen we u helpen? Antwoord STOP om geen berichten meer te ontvangen.`;
+    return `Goedag, met ${client.name}. We hebben uw oproep gemist. Hoe kunnen we u helpen? Antwoord STOP om af te melden.`;
   }
 
-  return `Bonjour, c'est ${client.name}. Vous nous avez appelé mais nous n'avons pas pu décrocher. Comment pouvons-nous vous aider ? Répondez STOP pour ne plus recevoir de messages.`;
+  return `Bonjour, c'est ${client.name}. On a manqué votre appel. Comment pouvons-nous vous aider ? Répondez STOP pour vous désinscrire.`;
 }
 
 /**
@@ -66,11 +77,12 @@ export async function buildOutOfHoursSmsBody(
 
   if (template) return template.body;
 
+  // Gabarits courts : tiennent en 1 segment SMS, nom d'entreprise inclus.
   if (language === "nl") {
-    return `Goedag, u spreekt met ${client.name}. U heeft ons gebeld maar onze kantoren zijn momenteel gesloten. We nemen zo snel mogelijk contact met u op. Antwoord STOP om geen berichten meer te ontvangen.`;
+    return `Goedag, met ${client.name}. We hebben uw oproep gemist, ons kantoor is gesloten. We nemen snel contact op. STOP om af te melden.`;
   }
 
-  return `Bonjour, c'est ${client.name}. Vous nous avez appelé mais nos bureaux sont actuellement fermés. Nous vous recontacterons dès que possible. Répondez STOP pour ne plus recevoir de messages.`;
+  return `Bonjour, c'est ${client.name}. On a manqué votre appel, nos bureaux sont fermés. On vous recontacte vite. STOP pour vous désinscrire.`;
 }
 
 /**

@@ -36,7 +36,8 @@ function buildSystemPrompt(clientName: string, language: string): string {
 
 Comportement attendu :
 - ${langInstruction}
-- Répondez de manière professionnelle, chaleureuse et concise (SMS = court, ≤ 320 caractères)
+- Répondez de manière professionnelle, chaleureuse et concise (SMS = court, ≤ 155 caractères pour tenir en 1 segment)
+- N'utilisez JAMAIS d'emoji ni de caractères spéciaux (guillemets courbes, tirets longs, accents circonflexes) : uniquement des caractères simples
 - Cherchez à qualifier le besoin : type de travail demandé, urgence, lieu d'intervention, disponibilités du client
 - La conversation débute par la réponse du client à votre SMS de prise de contact
 - Maximum ${MAX_USER_TURNS} messages du client au total ; si ce seuil est atteint, transmettez et mettez needs_human à true
@@ -61,7 +62,7 @@ const QUALIFY_TOOL: Anthropic.Tool = {
       reply: {
         type: "string",
         description:
-          "Le SMS de réponse à envoyer au client. Ton naturel et humain, ≤ 320 caractères.",
+          "Le SMS de réponse à envoyer au client. Ton naturel et humain, ≤ 155 caractères (1 segment SMS), sans emoji ni caractères spéciaux.",
       },
       qualification: {
         type: "object",
@@ -124,7 +125,7 @@ export async function qualifyMessage(params: {
 
   const response = await getAnthropicClient().messages.create({
     model: QUALIFICATION_MODEL,
-    max_tokens: 400,
+    max_tokens: 300,
     system: [
       {
         type: "text",

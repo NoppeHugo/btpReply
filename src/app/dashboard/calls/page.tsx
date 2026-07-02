@@ -49,7 +49,67 @@ export default async function CallsPage() {
       {calls.length === 0 ? (
         <p className="app-muted text-sm">Aucun appel pour l&apos;instant.</p>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
+        <>
+        {/* Cartes (mobile) */}
+        <div className="space-y-3 md:hidden">
+          {calls.map((call) => {
+            const lead = call.conversation?.lead;
+            const card = (
+              <div className="app-card-sm">
+                <div className="flex items-start justify-between gap-3">
+                  <span className="font-mono text-sm text-white">
+                    {call.callerNumber}
+                  </span>
+                  {lead?.urgency ? (
+                    <span
+                      className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${
+                        URGENCY_BADGE[lead.urgency] ?? ""
+                      }`}
+                    >
+                      {lead.urgency}
+                    </span>
+                  ) : (
+                    <span className="pill shrink-0">
+                      {call.conversation
+                        ? (STATE_LABEL[call.conversation.state] ??
+                          call.conversation.state)
+                        : "—"}
+                    </span>
+                  )}
+                </div>
+                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/60">
+                  {session.user.role === "admin" && (
+                    <span>{call.client.displayName ?? call.client.name}</span>
+                  )}
+                  {lead?.type && <span>{lead.type}</span>}
+                  {lead?.status && <span>Lead : {lead.status}</span>}
+                  <span className="text-white/30">
+                    {new Date(call.calledAt).toLocaleString("fr-BE", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+              </div>
+            );
+            return call.conversation ? (
+              <Link
+                key={call.id}
+                href={`/dashboard/conversations/${call.conversation.id}`}
+                className="block transition-colors hover:opacity-80"
+              >
+                {card}
+              </Link>
+            ) : (
+              <div key={call.id}>{card}</div>
+            );
+          })}
+        </div>
+
+        {/* Table (desktop) */}
+        <div className="hidden overflow-x-auto rounded-2xl border border-white/10 bg-white/[0.03] md:block">
           <table className="w-full text-sm">
             <thead className="border-b border-white/10 bg-white/[0.02]">
               <tr>
@@ -120,6 +180,7 @@ export default async function CallsPage() {
             </tbody>
           </table>
         </div>
+        </>
       )}
     </div>
   );

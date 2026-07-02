@@ -31,7 +31,7 @@ export default async function ClientsPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h1 className="app-h1">Clients ({clients.length})</h1>
         <Link href="/dashboard/clients/new" className="btn-primary">
           + Nouveau client
@@ -41,7 +41,46 @@ export default async function ClientsPage() {
       {clients.length === 0 ? (
         <p className="app-muted text-sm">Aucun client pour l&apos;instant.</p>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
+        <>
+        {/* Cartes (mobile) */}
+        <div className="space-y-3 md:hidden">
+          {clients.map((c) => (
+            <Link
+              key={c.id}
+              href={`/dashboard/clients/${c.id}`}
+              className="app-card-sm block transition-colors hover:bg-white/[0.05]"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate font-medium text-white">
+                    {c.displayName ?? c.name}
+                  </p>
+                  {c.displayName && (
+                    <p className="truncate text-xs text-white/40">{c.name}</p>
+                  )}
+                </div>
+                <span
+                  className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${
+                    STAGE_BADGE[c.stage] ?? ""
+                  }`}
+                >
+                  {c.stage}
+                </span>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/60">
+                <span>📞 {c._count.calls} appels</span>
+                <span>✅ {c._count.leads} leads</span>
+                <span>👥 {c._count.users} users</span>
+                <span className="text-white/30">
+                  {new Date(c.createdAt).toLocaleDateString("fr-BE")}
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        {/* Table (desktop) */}
+        <div className="hidden overflow-x-auto rounded-2xl border border-white/10 bg-white/[0.03] md:block">
           <table className="w-full text-sm">
             <thead className="border-b border-white/10 bg-white/[0.02]">
               <tr>
@@ -93,6 +132,7 @@ export default async function ClientsPage() {
             </tbody>
           </table>
         </div>
+        </>
       )}
     </div>
   );

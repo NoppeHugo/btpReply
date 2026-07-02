@@ -133,10 +133,10 @@ export default async function ChecklistPage() {
             {activeClients.map((c) => (
               <div
                 key={c.id}
-                className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2"
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2"
               >
                 <span className="text-sm font-medium text-white/80">{c.name}</span>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Badge ok={c.hasPhone} label="Numéro Twilio" />
                   <Badge ok={c.hasOwner} label="Compte owner" />
                   <Badge ok={c.hasHours} label="Horaires" />
