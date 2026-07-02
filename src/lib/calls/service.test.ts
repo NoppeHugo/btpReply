@@ -3,7 +3,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("@/lib/db", () => ({
   db: {
     phoneNumber: { findUnique: vi.fn() },
-    call: { create: vi.fn() },
+    call: { create: vi.fn(), findUnique: vi.fn() },
+    scheduledJob: { create: vi.fn() },
   },
 }));
 vi.mock("@/lib/logger", () => ({ logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() } }));
@@ -21,7 +22,8 @@ import { db } from "@/lib/db";
 
 const mockDb = db as unknown as {
   phoneNumber: { findUnique: ReturnType<typeof vi.fn> };
-  call: { create: ReturnType<typeof vi.fn> };
+  call: { create: ReturnType<typeof vi.fn>; findUnique: ReturnType<typeof vi.fn> };
+  scheduledJob: { create: ReturnType<typeof vi.fn> };
 };
 
 const BASE_PARAMS = {
@@ -36,6 +38,7 @@ describe("handleIncomingCall", () => {
 
   it("crée un Call et retourne callId + clientId quand le numéro est connu", async () => {
     mockDb.phoneNumber.findUnique.mockResolvedValue({ id: "phone-01", clientId: "client-01" });
+    mockDb.call.findUnique.mockResolvedValue(null);
     mockDb.call.create.mockResolvedValue({ id: "call-01", clientId: "client-01" });
 
     const result = await handleIncomingCall(BASE_PARAMS);
@@ -50,6 +53,16 @@ describe("handleIncomingCall", () => {
 
   it("retourne null et ne crée pas de Call si le numéro est inconnu", async () => {
     mockDb.phoneNumber.findUnique.mockResolvedValue(null);
+
+    const result = await handleIncomingCall(BASE_PARAMS);
+
+    expect(result).toBeNull();
+    expect(mockDb.call.create).not.toHaveBeenCalled();
+  });
+
+  it("est idempotent : un CallSid déjà traité ne crée pas de doublon", async () => {
+    mockDb.phoneNumber.findUnique.mockResolvedValue({ id: "phone-01", clientId: "client-01" });
+    mockDb.call.findUnique.mockResolvedValue({ id: "call-01" });
 
     const result = await handleIncomingCall(BASE_PARAMS);
 

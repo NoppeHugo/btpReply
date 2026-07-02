@@ -13,6 +13,7 @@ Cibles : artisans/PME de la région de Mouscron + Eurométropole Lille-Kortrijk-
 Multi-tenant dès le départ. Équipe : 2 personnes (un technique, un commercial).
 
 **Interdit absolu côté client final :** les mots « IA », « bot », « robot », « automatique » dans tout SMS envoyé à un appelant. Le service doit ressembler à un secrétariat humain.
+**Exception légale (AI Act art. 50)** : le service ne prétend jamais être une personne physique, et si l'appelant demande explicitement s'il parle à un robot/une machine, il le confirme (« service de messages automatisé ») puis passe en handoff. Voir journal de décisions du 2026-07-02.
 
 ---
 

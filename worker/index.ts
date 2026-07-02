@@ -4,6 +4,7 @@ import cron from "node-cron";
 import { validateEnv } from "../src/lib/env";
 import { runDailyRecap } from "./jobs/dailyRecap";
 import { runRgpdPurge } from "./jobs/rgpdPurge";
+import { runScheduledJobs } from "./jobs/scheduledJobs";
 
 // Sentry — initialiser avant tout le reste
 Sentry.init({
@@ -15,6 +16,11 @@ Sentry.init({
 
 // Valider les variables d'environnement au démarrage
 validateEnv();
+
+// Jobs persistants (SMS initial différé…) — toutes les 10 secondes
+cron.schedule("*/10 * * * * *", async () => {
+  await runScheduledJobs();
+});
 
 // Récap quotidien — tous les jours à 20h (Europe/Brussels)
 cron.schedule(

@@ -31,3 +31,22 @@ export async function addToOptOutList(
 
   logger.info({ clientId, number }, "Numéro ajouté à la liste d'opt-out (STOP)");
 }
+
+/**
+ * S3 (audit) : réinscription (START). Ne retire QUE les entrées créées par un
+ * opt-out — jamais un numéro ajouté manuellement à la liste blanche.
+ * Retourne true si une entrée a été retirée.
+ */
+export async function removeFromOptOutList(
+  clientId: string,
+  number: string
+): Promise<boolean> {
+  const { count } = await db.whitelistEntry.deleteMany({
+    where: { clientId, number, label: "opted_out" },
+  });
+
+  if (count > 0) {
+    logger.info({ clientId, number }, "Numéro retiré de la liste d'opt-out (START)");
+  }
+  return count > 0;
+}

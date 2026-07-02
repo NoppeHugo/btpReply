@@ -53,6 +53,8 @@ export async function POST(
       to: conversation.callerNumber,
       from: fromNumber,
       body: parsed.data.body,
+      // Message écrit par l'artisan : jamais tronqué (F3 audit).
+      allowMultiSegment: true,
     });
   } catch (err) {
     logger.error({ err, conversationId: id }, "Échec envoi SMS manuel");

@@ -61,20 +61,28 @@ export async function recordMessage(params: RecordMessageParams): Promise<string
 }
 
 /**
- * P2-T5 : retrouve une Conversation ouverte par numéro appelant + client.
+ * P2-T5 : retrouve une Conversation active par numéro appelant + client.
+ * F2 (audit) : inclut `handed_off` — les réponses d'un client après handoff
+ * doivent être enregistrées (et alerter le patron), pas jetées.
  */
 export async function findOpenConversationByCallerNumber(
   clientId: string,
   callerNumber: string
-): Promise<{ id: string; callId: string; turnCount: number; autopilot: boolean } | null> {
+): Promise<{
+  id: string;
+  callId: string;
+  turnCount: number;
+  autopilot: boolean;
+  state: ConversationState;
+} | null> {
   return db.conversation.findFirst({
     where: {
       clientId,
       callerNumber,
-      state: { in: ["open", "qualified"] },
+      state: { in: ["open", "qualified", "handed_off"] },
     },
     orderBy: { createdAt: "desc" },
-    select: { id: true, callId: true, turnCount: true, autopilot: true },
+    select: { id: true, callId: true, turnCount: true, autopilot: true, state: true },
   });
 }
 

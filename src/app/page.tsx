@@ -9,6 +9,7 @@ import {
   Clock,
   Languages,
   MessageSquareText,
+  Phone,
   PhoneMissed,
   ShieldCheck,
   UserRound,
@@ -16,7 +17,9 @@ import {
 
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { CONTACT_EMAIL, CONTACT_PHONE, CONTACT_PHONE_HREF } from "@/lib/site";
 import { CountUp } from "@/components/landing/count-up";
+import { DemoForm } from "@/components/landing/demo-form";
 import { LandingNav } from "@/components/landing/nav";
 import { LeadAlertScreen, PhoneFrame } from "@/components/landing/phone";
 import { Reveal } from "@/components/landing/reveal";
@@ -511,24 +514,28 @@ export default function Home() {
                 Démo en 15 min · mise en place offerte · 1er mois remboursé si
                 aucun client capté.
               </p>
-              <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+
+              <div className="mt-9">
+                <DemoForm />
+              </div>
+
+              <div className="mt-6 flex flex-col items-center justify-center gap-3 text-sm text-white/50 sm:flex-row">
+                {CONTACT_PHONE && (
+                  <a
+                    href={CONTACT_PHONE_HREF}
+                    className="inline-flex items-center gap-2 hover:text-white"
+                  >
+                    <Phone className="size-4" />
+                    {CONTACT_PHONE}
+                  </a>
+                )}
                 <a
-                  href="mailto:contact@rappl.eu?subject=Démo%20Rappl"
-                  className={cn(
-                    buttonVariants({ size: "lg" }),
-                    "h-12 rounded-full bg-amber-500 px-7 text-base text-neutral-950 hover:bg-amber-400",
-                  )}
+                  href={`mailto:${CONTACT_EMAIL}?subject=Démo%20Rappl`}
+                  className="hover:text-white"
                 >
-                  Réserver ma démo
-                  <ArrowRight className="size-4" />
+                  {CONTACT_EMAIL}
                 </a>
-                <Link
-                  href="/login"
-                  className={cn(
-                    buttonVariants({ variant: "outline", size: "lg" }),
-                    "h-12 rounded-full border-white/15 bg-transparent px-7 text-base text-white hover:bg-white/10 hover:text-white",
-                  )}
-                >
+                <Link href="/login" className="hover:text-white">
                   J&apos;ai déjà un compte
                 </Link>
               </div>
@@ -545,8 +552,22 @@ export default function Home() {
               </span>
               <span className="font-semibold">Rappl</span>
             </div>
-            <p>Fait pour les artisans de l&apos;Eurométropole. Hébergé en Europe.</p>
+            <p>Fait pour les artisans de l&apos;Eurométropole. Données hébergées en Europe.</p>
             <p>© {new Date().getFullYear()} Rappl</p>
+          </div>
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-6 gap-y-2 border-t border-white/5 px-6 py-5 text-xs text-white/35 sm:justify-start">
+            <Link href="/mentions-legales" className="hover:text-white">
+              Mentions légales
+            </Link>
+            <Link href="/confidentialite" className="hover:text-white">
+              Confidentialité
+            </Link>
+            <Link href="/cgv" className="hover:text-white">
+              CGV
+            </Link>
+            <a href={`mailto:${CONTACT_EMAIL}`} className="hover:text-white">
+              {CONTACT_EMAIL}
+            </a>
           </div>
         </footer>
       </main>

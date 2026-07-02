@@ -1,8 +1,50 @@
 import { db } from "@/lib/db";
 import { sendEmail, FROM_EMAIL } from "@/lib/email/client";
-import { buildLeadAlertEmail, type LeadAlertParams } from "@/lib/email/templates";
+import {
+  buildLeadAlertEmail,
+  buildHandoffReplyAlertEmail,
+  type LeadAlertParams,
+} from "@/lib/email/templates";
 import { sendSms } from "@/lib/sms/service";
 import { logger } from "@/lib/logger";
+
+/** Destinataires d'alerte : override alertEmail, sinon les owners du client. */
+async function resolveAlertRecipients(clientId: string): Promise<string[]> {
+  const client = await db.client.findUnique({
+    where: { id: clientId },
+    select: { alertEmail: true },
+  });
+
+  if (client?.alertEmail) return [client.alertEmail];
+
+  const owners = await db.user.findMany({
+    where: { clientId, role: "owner" },
+    select: { email: true },
+  });
+  return owners.map((o) => o.email);
+}
+
+/**
+ * F2 (audit) : alerte quand un client final répond après un handoff.
+ * Le bot ne répond plus sur cette conversation — le patron doit rappeler.
+ */
+export async function sendHandoffReplyAlert(
+  clientId: string,
+  params: { callerNumber: string; messageBody: string }
+): Promise<void> {
+  const recipients = await resolveAlertRecipients(clientId);
+  if (recipients.length === 0) {
+    logger.warn({ clientId }, "sendHandoffReplyAlert: aucun destinataire email");
+    return;
+  }
+
+  const { subject, html } = buildHandoffReplyAlertEmail(params);
+  const { error } = await sendEmail({ from: FROM_EMAIL, to: recipients, subject, html });
+  if (error) {
+    throw new Error(`SMTP error: ${error.message}`);
+  }
+  logger.info({ clientId, recipientCount: recipients.length }, "Alerte réponse post-handoff envoyée");
+}
 
 export async function sendLeadAlert(
   clientId: string,

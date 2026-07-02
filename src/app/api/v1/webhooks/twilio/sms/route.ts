@@ -9,9 +9,18 @@ import {
 } from "@/lib/conversations/service";
 import { qualifyMessage } from "@/lib/llm/qualification";
 import { upsertLead } from "@/lib/leads/service";
-import { sendLeadAlert } from "@/lib/alerts/service";
-import { sendSms, buildStopConfirmationBody } from "@/lib/sms/service";
-import { isNumberExcluded, addToOptOutList } from "@/lib/whitelist/service";
+import { sendLeadAlert, sendHandoffReplyAlert } from "@/lib/alerts/service";
+import {
+  sendSms,
+  buildStopConfirmationBody,
+  buildStartConfirmationBody,
+} from "@/lib/sms/service";
+import {
+  isNumberExcluded,
+  addToOptOutList,
+  removeFromOptOutList,
+} from "@/lib/whitelist/service";
+import { isOptOutMessage, isOptInMessage } from "@/lib/sms/optout";
 import { detectLanguage } from "@/lib/language/detect";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
@@ -49,8 +58,34 @@ export async function POST(req: NextRequest) {
 
   const { clientId } = phoneNumber;
 
-  // ── P5-T2 : traitement STOP en priorité absolue ───────────────────────
-  if (messageBody.trim().toUpperCase() === "STOP") {
+  // ── Idempotence : Twilio rejoue les webhooks (mêmes MessageSid) ───────
+  if (twilioSid) {
+    const alreadyProcessed = await db.message.findUnique({
+      where: { twilioSid },
+      select: { id: true },
+    });
+    if (alreadyProcessed) {
+      logger.info({ twilioSid }, "Webhook SMS rejoué — message déjà traité");
+      return new Response("", { status: 200 });
+    }
+  }
+
+  // ── S3 : réinscription START (avant le check d'exclusion) ─────────────
+  if (isOptInMessage(messageBody)) {
+    const removed = await removeFromOptOutList(clientId, callerNumber);
+    if (removed) {
+      await sendSms({
+        to: callerNumber,
+        from: toNumber,
+        body: buildStartConfirmationBody(),
+      });
+      logger.info({ clientId, callerNumber }, "START traité — opt-in confirmé");
+    }
+    return new Response("", { status: 200 });
+  }
+
+  // ── P5-T2 : traitement STOP en priorité absolue (variantes FR/NL) ─────
+  if (isOptOutMessage(messageBody)) {
     await addToOptOutList(clientId, callerNumber);
 
     // Fermer toute conversation ouverte pour ce numéro
@@ -96,6 +131,18 @@ export async function POST(req: NextRequest) {
   // ── P5-T5 : détection de langue sur le message entrant ───────────────
   const detectedLang = detectLanguage(messageBody);
   await updateConversationLanguage(conversation.id, detectedLang, clientId);
+
+  // ── F2 : conversation transmise au patron → pas de bot, mais alerte ───
+  if (conversation.state === ConversationState.handed_off) {
+    sendHandoffReplyAlert(clientId, { callerNumber, messageBody }).catch((err) =>
+      logger.error({ err, conversationId: conversation.id }, "Erreur alerte post-handoff")
+    );
+    logger.info(
+      { conversationId: conversation.id, clientId },
+      "Message reçu après handoff — enregistré, patron alerté, pas de réponse auto"
+    );
+    return new Response("", { status: 200 });
+  }
 
   // ── Reprise manuelle : si l'artisan a la main, on n'active pas le bot ──
   if (!conversation.autopilot) {

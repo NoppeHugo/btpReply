@@ -1,22 +1,42 @@
 import { getTwilioClient } from "@/lib/twilio/client";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
-import { enforceSingleSegment, computeSegments } from "./segments";
+import { enforceSingleSegment, computeSegments, sanitizeToGsm7 } from "./segments";
 
 interface SendSmsParams {
   to: string;
   from: string;
   body: string;
+  /**
+   * F3 (audit) : true pour les messages écrits par un humain (réponse manuelle
+   * de l'artisan) — on assainit en GSM-7 mais on ne tronque JAMAIS son texte.
+   * Le garde-fou 1 segment ne s'applique qu'aux messages générés (bot, gabarits).
+   */
+  allowMultiSegment?: boolean;
 }
 
 export async function sendSms(params: SendSmsParams): Promise<string> {
-  // Garde-fou coût : assainir en GSM-7 et garantir 1 seul segment facturé.
-  const { body, truncated } = enforceSingleSegment(params.body);
-  if (truncated) {
-    logger.warn(
-      { to: params.to, original: computeSegments(params.body) },
-      "SMS sortant tronqué pour tenir en 1 segment"
-    );
+  let body: string;
+
+  if (params.allowMultiSegment) {
+    body = sanitizeToGsm7(params.body).trim();
+    const info = computeSegments(body);
+    if (info.segments > 1) {
+      logger.info(
+        { to: params.to, segments: info.segments },
+        "SMS manuel multi-segments envoyé"
+      );
+    }
+  } else {
+    // Garde-fou coût : assainir en GSM-7 et garantir 1 seul segment facturé.
+    const result = enforceSingleSegment(params.body);
+    body = result.body;
+    if (result.truncated) {
+      logger.warn(
+        { to: params.to, original: computeSegments(params.body) },
+        "SMS sortant tronqué pour tenir en 1 segment"
+      );
+    }
   }
 
   const msg = await getTwilioClient().messages.create({
@@ -91,4 +111,12 @@ export async function buildOutOfHoursSmsBody(
  */
 export function buildStopConfirmationBody(): string {
   return "Votre désinscription est confirmée. Vous ne recevrez plus de messages. / Uw afmelding is bevestigd. U ontvangt geen berichten meer.";
+}
+
+/**
+ * S3 (audit) : confirmation envoyée après un START (réinscription).
+ * Bilingue, comme la confirmation STOP.
+ */
+export function buildStartConfirmationBody(): string {
+  return "C'est noté, vous pouvez de nouveau recevoir nos messages. / Genoteerd, u kunt opnieuw berichten van ons ontvangen.";
 }

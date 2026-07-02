@@ -305,6 +305,40 @@ model ClientNote {
 }
 
 // ---------------------------------------------------------------------------
+// ScheduledJob (durable deferred work — survives restarts, processed by worker)
+// ---------------------------------------------------------------------------
+
+model ScheduledJob {
+  id        String    @id @default(cuid())
+  type      String
+  payload   Json
+  runAt     DateTime
+  claimedAt DateTime?
+  doneAt    DateTime?
+  attempts  Int       @default(0)
+  lastError String?
+  createdAt DateTime  @default(now())
+
+  @@index([doneAt, runAt])
+  @@map("scheduled_jobs")
+}
+
+// ---------------------------------------------------------------------------
+// DemoRequest (landing page demo form submissions)
+// ---------------------------------------------------------------------------
+
+model DemoRequest {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  company   String?
+  message   String?
+  createdAt DateTime @default(now())
+
+  @@map("demo_requests")
+}
+
+// ---------------------------------------------------------------------------
 // ClientMessage (outbound messages from founders to a client/artisan)
 // ---------------------------------------------------------------------------
 

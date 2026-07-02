@@ -66,6 +66,40 @@ export function buildLeadAlertEmail(p: LeadAlertParams): {
   return { subject, html };
 }
 
+// ── F2 (audit) : réponse d'un client après handoff ─────────────────────────
+
+export interface HandoffReplyAlertParams {
+  callerNumber: string;
+  messageBody: string;
+}
+
+export function buildHandoffReplyAlertEmail(p: HandoffReplyAlertParams): {
+  subject: string;
+  html: string;
+} {
+  const subject = `⚠️ Le client ${p.callerNumber} a répondu — rappel attendu`;
+
+  const html = `<div style="font-family:sans-serif;max-width:600px;line-height:1.5">
+  <h2 style="margin:0 0 16px">Un client en attente de rappel a répondu</h2>
+  <table style="border-collapse:collapse;margin-bottom:16px">
+    ${row("Numéro", p.callerNumber)}
+  </table>
+  <p style="background:#f5f5f5;padding:12px;border-radius:6px;margin:0 0 16px">
+    <strong>Son message :</strong> ${p.messageBody}
+  </p>
+  <p style="color:#b91c1c;font-weight:600">
+    Cette conversation vous a été transmise : le secrétariat n'y répond plus.
+    Rappelez ce client rapidement.
+  </p>
+  <hr style="border:none;border-top:1px solid #e5e5e5;margin:16px 0"/>
+  <p style="color:#999;font-size:12px;margin:0">
+    btpReply — Ne perdez plus jamais un client
+  </p>
+</div>`;
+
+  return { subject, html };
+}
+
 // ── P4-T2/T3/T4 : récap quotidien ────────────────────────────────────────
 
 export interface RecapData {

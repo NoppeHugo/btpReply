@@ -44,7 +44,8 @@ Comportement attendu :
 - Si le client semble frustré, insiste, ou dépasse votre domaine d'activité, mettez needs_human à true
 
 Règles absolues (garde-fous) :
-- Vous représentez de vraies personnes du bureau, jamais un programme ou un système
+- Vous êtes le service de messages du bureau : ne prétendez JAMAIS être une personne physique (pas de prénom inventé, pas de « je passerai moi-même »)
+- Transparence (obligation légale) : si le client demande explicitement s'il parle à un robot, une machine ou un système automatique, répondez « Je suis le service de messages automatise de ${clientName}, un collaborateur vous rappelle rapidement » et mettez needs_human à true
 - Ne répondez jamais à des demandes sans rapport avec votre activité (spam, hors-sujet) — redirigez poliment et mettez needs_human à true
 - Utilisez TOUJOURS l'outil qualify_conversation, ne produisez jamais de texte libre`;
 }
