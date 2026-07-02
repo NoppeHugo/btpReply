@@ -1,14 +1,65 @@
-import { Resend } from "resend";
+import nodemailer, { type Transporter } from "nodemailer";
 
-let _client: Resend | null = null;
+let _transporter: Transporter | null = null;
 
-export function getResendClient(): Resend {
-  if (_client) return _client;
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) throw new Error("RESEND_API_KEY manquant");
-  _client = new Resend(apiKey);
-  return _client;
+/**
+ * Transport SMTP (Gmail par défaut).
+ * Variables : SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS.
+ * Pour Gmail : host smtp.gmail.com, port 587, user = adresse Gmail,
+ * pass = "mot de passe d'application" (pas le mot de passe du compte).
+ */
+function getTransporter(): Transporter {
+  if (_transporter) return _transporter;
+
+  const host = process.env.SMTP_HOST;
+  const port = Number(process.env.SMTP_PORT ?? 587);
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+
+  if (!host || !user || !pass) {
+    throw new Error(
+      "Configuration SMTP manquante (SMTP_HOST / SMTP_USER / SMTP_PASS)"
+    );
+  }
+
+  _transporter = nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465, // 465 = SSL implicite, 587 = STARTTLS
+    auth: { user, pass },
+  });
+
+  return _transporter;
 }
 
 export const FROM_EMAIL =
-  process.env.FROM_EMAIL ?? "Rappl <noreply@rappl.be>";
+  process.env.FROM_EMAIL ?? process.env.SMTP_USER ?? "Rappl <noreply@rappl.be>";
+
+type SendEmailParams = {
+  from?: string;
+  to: string | string[];
+  subject: string;
+  html: string;
+};
+
+/**
+ * Envoie un email via SMTP. Retourne `{ error }` (null si succès) pour rester
+ * compatible avec les appels existants.
+ */
+export async function sendEmail(
+  params: SendEmailParams
+): Promise<{ error: { message: string } | null }> {
+  try {
+    await getTransporter().sendMail({
+      from: params.from ?? FROM_EMAIL,
+      to: params.to,
+      subject: params.subject,
+      html: params.html,
+    });
+    return { error: null };
+  } catch (err) {
+    return {
+      error: { message: err instanceof Error ? err.message : String(err) },
+    };
+  }
+}

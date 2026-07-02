@@ -3,7 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { ok, HTTP } from "@/lib/api/response";
 import { getAuthedUser } from "@/lib/api/auth";
-import { getResendClient, FROM_EMAIL } from "@/lib/email/client";
+import { sendEmail, FROM_EMAIL } from "@/lib/email/client";
 import { logger } from "@/lib/logger";
 
 const schema = z.object({
@@ -49,7 +49,7 @@ export async function POST(
     if (client.users.length === 0) {
       return HTTP.badRequest("Ce client n'a pas d'utilisateur owner pour recevoir l'email");
     }
-    const { error } = await getResendClient().emails.send({
+    const { error } = await sendEmail({
       from: FROM_EMAIL,
       to: client.users.map((u) => u.email),
       subject: parsed.data.subject ?? `Message de btpReply — ${client.name}`,

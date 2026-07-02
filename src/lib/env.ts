@@ -4,7 +4,9 @@ const REQUIRED: Record<string, string> = {
   TWILIO_ACCOUNT_SID: "Webhook Twilio Voice",
   TWILIO_AUTH_TOKEN: "Envoi SMS",
   TWILIO_WEBHOOK_SIGNING_KEY: "Signature webhook Twilio",
-  RESEND_API_KEY: "Envoi emails",
+  SMTP_HOST: "Serveur SMTP (emails)",
+  SMTP_USER: "Utilisateur SMTP",
+  SMTP_PASS: "Mot de passe SMTP",
   APP_BASE_URL: "URL de l'application",
   API_SECRET_KEY: "Auth API bearer",
   AUTH_SECRET: "Auth.js sessions",
@@ -18,7 +20,8 @@ const OPTIONAL: Record<string, string> = {
   SENTRY_DSN: "Observabilité erreurs",
   ANTHROPIC_MODEL_QUALIFICATION: "Modèle LLM (défaut: claude-haiku-4-5-20251001)",
   INITIAL_SMS_DELAY_MS: "Délai SMS initial (défaut: 30000)",
-  FROM_EMAIL: "Adresse expéditeur email",
+  SMTP_PORT: "Port SMTP (défaut: 587)",
+  FROM_EMAIL: "Adresse expéditeur email (défaut: SMTP_USER)",
 };
 
 export type EnvStatus = {

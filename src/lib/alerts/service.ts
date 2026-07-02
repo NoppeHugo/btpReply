@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { getResendClient, FROM_EMAIL } from "@/lib/email/client";
+import { sendEmail, FROM_EMAIL } from "@/lib/email/client";
 import { buildLeadAlertEmail, type LeadAlertParams } from "@/lib/email/templates";
 import { sendSms } from "@/lib/sms/service";
 import { logger } from "@/lib/logger";
@@ -37,14 +37,14 @@ export async function sendLeadAlert(
     logger.warn({ clientId }, "sendLeadAlert: aucun destinataire email — alerte email non envoyée");
   } else {
     const { subject, html } = buildLeadAlertEmail(params);
-    const { error } = await getResendClient().emails.send({
+    const { error } = await sendEmail({
       from: FROM_EMAIL,
       to: recipients,
       subject,
       html,
     });
     if (error) {
-      throw new Error(`Resend error: ${error.message}`);
+      throw new Error(`SMTP error: ${error.message}`);
     }
     logger.info({ clientId, recipientCount: recipients.length }, "Alerte lead envoyée (email)");
   }
