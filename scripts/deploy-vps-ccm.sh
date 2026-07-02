@@ -16,8 +16,8 @@ ask()     { echo -e "${YELLOW}  → $1${NC}"; read -r -p "    Valeur : " _val; e
 
 APP_DIR="/opt/btpreply"
 CADDYFILE="/home/hugo/ccm/Caddyfile"
-APP_DOMAIN="btpreply.collierscolliersmaison.be"
-TLS_EMAIL="admin@collierscolliersmaison.be"
+APP_DOMAIN="rappl.be"
+TLS_EMAIL="admin@rappl.be"
 CADDY_CONTAINER="ccm-caddy-1"
 CCM_NETWORK="ccm_internal"
 
@@ -50,14 +50,23 @@ _set_env() {
 
 _get_env() { grep "^${1}=" "$ENV_FILE" | cut -d= -f2- | tr -d '"' || echo ""; }
 
+# Force la valeur d'une clé (écrase l'existant) — pour les clés qui doivent
+# suivre le domaine courant même après un changement de domaine.
+_force_env() {
+  local key="$1" val="$2"
+  sed -i "s|^${key}=.*||" "$ENV_FILE"
+  echo "${key}=${val}" >> "$ENV_FILE"
+}
+
 # Secrets auto-générés
 POSTGRES_PW=$(openssl rand -base64 32 | tr -dc 'A-Za-z0-9' | head -c 32)
 _set_env "POSTGRES_PASSWORD"  "$POSTGRES_PW"
 _set_env "DATABASE_URL"       "postgresql://btpreply:${POSTGRES_PW}@db:5432/btpreply"
 _set_env "AUTH_SECRET"        "$(openssl rand -base64 32)"
 _set_env "API_SECRET_KEY"     "$(openssl rand -base64 32 | tr -dc 'A-Za-z0-9' | head -c 32)"
-_set_env "APP_BASE_URL"       "https://${APP_DOMAIN}"
-_set_env "APP_DOMAIN"         "${APP_DOMAIN}"
+# Domaine : forcé pour suivre APP_DOMAIN même si l'ancien est déjà dans .env
+_force_env "APP_BASE_URL"     "https://${APP_DOMAIN}"
+_force_env "APP_DOMAIN"       "${APP_DOMAIN}"
 _set_env "ANTHROPIC_MODEL_QUALIFICATION" "claude-haiku-4-5"
 _set_env "INITIAL_SMS_DELAY_MS" "30000"
 _set_env "FROM_EMAIL"         "btpReply <noreply@btpreply.be>"
@@ -138,6 +147,11 @@ else
 ${APP_DOMAIN} {
   tls ${TLS_EMAIL}
   reverse_proxy btpreply-app-1:3000
+}
+
+www.${APP_DOMAIN} {
+  tls ${TLS_EMAIL}
+  redir https://${APP_DOMAIN}{uri} permanent
 }
 EOF
   success "$APP_DOMAIN ajouté au Caddyfile"
