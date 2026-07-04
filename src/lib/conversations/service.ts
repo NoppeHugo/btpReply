@@ -37,7 +37,7 @@ interface RecordMessageParams {
   conversationId: string;
   direction: MessageDirection;
   body: string;
-  twilioSid?: string;
+  providerMessageId?: string;
 }
 
 export async function recordMessage(params: RecordMessageParams): Promise<string> {
@@ -47,7 +47,7 @@ export async function recordMessage(params: RecordMessageParams): Promise<string
       conversationId: params.conversationId,
       direction: params.direction,
       body: params.body,
-      twilioSid: params.twilioSid,
+      providerMessageId: params.providerMessageId,
     },
     select: { id: true },
   });
@@ -75,6 +75,31 @@ export async function findOpenConversationByCallerNumber(
     },
     orderBy: { createdAt: "desc" },
     select: { id: true, callId: true, turnCount: true, autopilot: true },
+  });
+}
+
+/**
+ * Numéro smstools partagé entre tous les clients : on ne peut pas déduire le
+ * client depuis le numéro destinataire. On retrouve donc la conversation
+ * ouverte la plus récente pour ce numéro appelant, tous clients confondus,
+ * et on en déduit le clientId.
+ */
+export async function findOpenConversationByCaller(
+  callerNumber: string
+): Promise<{
+  id: string;
+  clientId: string;
+  callId: string;
+  turnCount: number;
+  autopilot: boolean;
+} | null> {
+  return db.conversation.findFirst({
+    where: {
+      callerNumber,
+      state: { in: ["open", "qualified"] },
+    },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, clientId: true, callId: true, turnCount: true, autopilot: true },
   });
 }
 

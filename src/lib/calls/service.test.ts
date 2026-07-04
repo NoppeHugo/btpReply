@@ -40,7 +40,7 @@ describe("handleIncomingCall", () => {
 
     const result = await handleIncomingCall(BASE_PARAMS);
 
-    expect(result).toEqual({ callId: "call-01", clientId: "client-01", fromNumber: "+32499000001" });
+    expect(result).toEqual({ callId: "call-01", clientId: "client-01" });
     expect(mockDb.call.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ twilioCallSid: "CA123", callerNumber: "+32477000001" }),

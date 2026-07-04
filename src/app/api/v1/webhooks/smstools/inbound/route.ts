@@ -1,7 +1,6 @@
 import { NextRequest } from "next/server";
-import { validateTwilioSignature } from "@/lib/twilio/signature";
 import {
-  findOpenConversationByCallerNumber,
+  findOpenConversationByCaller,
   getConversationForLLM,
   recordMessage,
   updateConversationLanguage,
@@ -13,58 +12,74 @@ import { sendLeadAlert } from "@/lib/alerts/service";
 import { sendSms, buildStopConfirmationBody } from "@/lib/sms/service";
 import { isNumberExcluded, addToOptOutList } from "@/lib/whitelist/service";
 import { detectLanguage } from "@/lib/language/detect";
-import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { ConversationState, MessageDirection } from "@/generated/prisma/client";
 
-export async function POST(req: NextRequest) {
-  // ── Vérification signature Twilio ─────────────────────────────────────
-  const signature = req.headers.get("x-twilio-signature") ?? "";
-  const url = `${process.env.APP_BASE_URL}/api/v1/webhooks/twilio/sms`;
-  const body = await req.formData();
-  const params = Object.fromEntries(
-    [...body.entries()].map(([k, v]) => [k, String(v)])
-  );
+// Webhook « inbox_message » de smstools (SMS entrant).
+// smstools ne signe pas ses webhooks (pas de HMAC documenté) : on sécurise par
+// un token secret passé en query string dans l'URL de callback configurée côté
+// smstools : https://.../api/v1/webhooks/smstools/inbound?token=SMSTOOLS_WEBHOOK_SECRET
 
-  if (!validateTwilioSignature(url, params, signature)) {
-    logger.warn("Webhook SMS rejeté — signature invalide");
+interface InboxPayload {
+  webhook_type?: string;
+  message?: {
+    id?: string | number;
+    sender?: string; // numéro du client (appelant)
+    receiver?: string; // notre numéro smstools partagé
+    content?: string;
+  };
+}
+
+export async function POST(req: NextRequest) {
+  // ── Sécurité : token secret dans l'URL ───────────────────────────────
+  const secret = process.env.SMSTOOLS_WEBHOOK_SECRET;
+  const token = req.nextUrl.searchParams.get("token");
+  if (!secret || token !== secret) {
+    logger.warn("Webhook smstools rejeté — token invalide");
     return new Response("Forbidden", { status: 403 });
   }
 
-  const callerNumber = params["From"] ?? "";
-  const toNumber = params["To"] ?? "";
-  const messageBody = params["Body"] ?? "";
-  const twilioSid = params["MessageSid"] ?? undefined;
-
-  // ── Trouver le client par numéro Twilio ──────────────────────────────
-  const phoneNumber = await db.phoneNumber.findUnique({
-    where: { number: toNumber, active: true },
-    select: { clientId: true },
-  });
-
-  if (!phoneNumber) {
-    logger.warn({ toNumber }, "SMS entrant sur numéro inconnu — ignoré");
+  let payload: InboxPayload;
+  try {
+    payload = (await req.json()) as InboxPayload;
+  } catch {
+    logger.warn("Webhook smstools — corps JSON illisible");
     return new Response("", { status: 200 });
   }
 
-  const { clientId } = phoneNumber;
+  // On ne traite que les messages entrants.
+  if (payload.webhook_type && payload.webhook_type !== "inbox_message") {
+    logger.info({ type: payload.webhook_type }, "Webhook smstools ignoré (type non géré)");
+    return new Response("", { status: 200 });
+  }
+
+  const callerNumber = payload.message?.sender ?? "";
+  const messageBody = payload.message?.content ?? "";
+  const providerMessageId =
+    payload.message?.id != null ? String(payload.message.id) : undefined;
+
+  if (!callerNumber) {
+    logger.warn("SMS entrant smstools sans expéditeur — ignoré");
+    return new Response("", { status: 200 });
+  }
+
+  // ── Retrouver la conversation ouverte (numéro partagé → routage par appelant)
+  const conversation = await findOpenConversationByCaller(callerNumber);
+
+  if (!conversation) {
+    logger.info({ callerNumber }, "SMS entrant sans conversation ouverte — ignoré");
+    return new Response("", { status: 200 });
+  }
+
+  const { clientId } = conversation;
 
   // ── P5-T2 : traitement STOP en priorité absolue ───────────────────────
   if (messageBody.trim().toUpperCase() === "STOP") {
     await addToOptOutList(clientId, callerNumber);
+    await updateConversationState(conversation.id, ConversationState.closed, clientId);
 
-    // Fermer toute conversation ouverte pour ce numéro
-    const openConv = await findOpenConversationByCallerNumber(clientId, callerNumber);
-    if (openConv) {
-      await updateConversationState(openConv.id, ConversationState.closed, clientId);
-    }
-
-    // Confirmer l'opt-out
-    await sendSms({
-      to: callerNumber,
-      from: toNumber,
-      body: buildStopConfirmationBody(),
-    });
+    // Confirmer l'opt-out (expéditeur = numéro smstools partagé par défaut).
+    await sendSms({ to: callerNumber, body: buildStopConfirmationBody() });
 
     logger.info({ clientId, callerNumber }, "STOP traité — opt-out confirmé");
     return new Response("", { status: 200 });
@@ -76,21 +91,13 @@ export async function POST(req: NextRequest) {
     return new Response("", { status: 200 });
   }
 
-  // ── Retrouver la conversation ouverte ────────────────────────────────
-  const conversation = await findOpenConversationByCallerNumber(clientId, callerNumber);
-
-  if (!conversation) {
-    logger.info({ clientId, callerNumber }, "SMS entrant sans conversation ouverte — ignoré");
-    return new Response("", { status: 200 });
-  }
-
   // ── Enregistrer le message entrant ───────────────────────────────────
   await recordMessage({
     clientId,
     conversationId: conversation.id,
     direction: MessageDirection.inbound,
     body: messageBody,
-    twilioSid,
+    providerMessageId,
   });
 
   // ── P5-T5 : détection de langue sur le message entrant ───────────────
@@ -160,18 +167,14 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Envoyer la réponse SMS + enregistrer l'outbound ──────────────
-    const replySid = await sendSms({
-      to: callerNumber,
-      from: toNumber,
-      body: result.reply,
-    });
+    const replyId = await sendSms({ to: callerNumber, body: result.reply });
 
     await recordMessage({
       clientId,
       conversationId: conversation.id,
       direction: MessageDirection.outbound,
       body: result.reply,
-      twilioSid: replySid,
+      providerMessageId: replyId,
     });
 
     logger.info(

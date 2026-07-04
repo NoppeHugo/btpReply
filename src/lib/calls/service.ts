@@ -20,7 +20,6 @@ interface IncomingCallParams {
 interface CreateCallResult {
   callId: string;
   clientId: string;
-  fromNumber: string;
 }
 
 export async function handleIncomingCall(
@@ -54,7 +53,7 @@ export async function handleIncomingCall(
     "Appel manqué journalisé"
   );
 
-  return { callId: call.id, clientId: call.clientId, fromNumber: toNumber };
+  return { callId: call.id, clientId: call.clientId };
 }
 
 /**
@@ -65,8 +64,7 @@ export async function handleIncomingCall(
 export async function scheduleInitialSms(
   callId: string,
   clientId: string,
-  callerNumber: string,
-  fromNumber: string
+  callerNumber: string
 ): Promise<void> {
   // Délai configurable par client (secondes) ; fallback env ou 30 s.
   const client = await db.client.findUnique({
@@ -92,7 +90,7 @@ export async function scheduleInitialSms(
         ? await buildInitialSmsBody(clientId)
         : await buildOutOfHoursSmsBody(clientId);
 
-      const twilioSid = await sendSms({ to: callerNumber, from: fromNumber, body });
+      const providerMessageId = await sendSms({ to: callerNumber, body });
 
       const conversationId = await getOrCreateConversation({
         clientId,
@@ -105,7 +103,7 @@ export async function scheduleInitialSms(
         conversationId,
         direction: MessageDirection.outbound,
         body,
-        twilioSid,
+        providerMessageId,
       });
     } catch (err) {
       logger.error({ err, callId }, "Erreur lors de l'envoi du SMS initial");

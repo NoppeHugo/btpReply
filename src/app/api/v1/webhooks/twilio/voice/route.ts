@@ -34,8 +34,7 @@ export async function POST(req: NextRequest) {
     scheduleInitialSms(
       callResult.callId,
       callResult.clientId,
-      callerNumber,
-      callResult.fromNumber
+      callerNumber
     ).catch((err) =>
       logger.error({ err, callId: callResult.callId }, "Erreur planification SMS initial")
     );

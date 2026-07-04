@@ -33,7 +33,6 @@ export async function POST(
       id: true,
       clientId: true,
       callerNumber: true,
-      call: { select: { phoneNumber: { select: { number: true } } } },
     },
   });
 
@@ -44,14 +43,11 @@ export async function POST(
     return HTTP.forbidden();
   }
 
-  const fromNumber = conversation.call.phoneNumber.number;
-
-  // 1. Envoi du SMS
-  let twilioSid: string;
+  // 1. Envoi du SMS (expéditeur = numéro smstools partagé par défaut)
+  let providerMessageId: string;
   try {
-    twilioSid = await sendSms({
+    providerMessageId = await sendSms({
       to: conversation.callerNumber,
-      from: fromNumber,
       body: parsed.data.body,
     });
   } catch (err) {
@@ -65,7 +61,7 @@ export async function POST(
     conversationId: conversation.id,
     direction: MessageDirection.outbound,
     body: parsed.data.body,
-    twilioSid,
+    providerMessageId,
   });
 
   // 3. Pause du bot : l'artisan a repris la main

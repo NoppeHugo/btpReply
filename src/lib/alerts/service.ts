@@ -13,11 +13,6 @@ export async function sendLeadAlert(
     select: {
       alertEmail: true,
       alertPhone: true,
-      phoneNumbers: {
-        where: { active: true },
-        take: 1,
-        select: { number: true },
-      },
     },
   });
 
@@ -50,15 +45,14 @@ export async function sendLeadAlert(
   }
 
   // ── Alerte SMS optionnelle (si un numéro d'alerte est configuré) ─────────
-  const fromNumber = client?.phoneNumbers[0]?.number;
-  if (client?.alertPhone && fromNumber) {
+  if (client?.alertPhone) {
     const urgencyLabel = params.urgency ? ` [${params.urgency}]` : "";
     const smsBody = `Nouveau lead${urgencyLabel} : ${params.type ?? "demande"} — ${params.callerNumber}. ${params.summary}`.slice(
       0,
       300
     );
     try {
-      await sendSms({ to: client.alertPhone, from: fromNumber, body: smsBody });
+      await sendSms({ to: client.alertPhone, body: smsBody });
       logger.info({ clientId }, "Alerte lead envoyée (SMS)");
     } catch (err) {
       logger.error({ err, clientId }, "Échec alerte SMS");

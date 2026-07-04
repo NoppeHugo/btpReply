@@ -1,15 +1,19 @@
 const REQUIRED: Record<string, string> = {
   DATABASE_URL: "Connexion PostgreSQL",
   ANTHROPIC_API_KEY: "Qualification LLM",
-  TWILIO_ACCOUNT_SID: "Webhook Twilio Voice",
-  TWILIO_AUTH_TOKEN: "Envoi SMS",
-  TWILIO_WEBHOOK_SIGNING_KEY: "Signature webhook Twilio",
+  SMSTOOLS_CLIENT_ID: "API smstools (X-Client-Id)",
+  SMSTOOLS_CLIENT_SECRET: "API smstools (X-Client-Secret)",
+  SMSTOOLS_SENDER: "Numéro/expéditeur SMS smstools",
+  SMSTOOLS_WEBHOOK_SECRET: "Token de sécurité du webhook SMS entrant",
+  TWILIO_WEBHOOK_SIGNING_KEY: "Signature webhook voice Twilio",
   APP_BASE_URL: "URL de l'application",
   API_SECRET_KEY: "Auth API bearer",
   AUTH_SECRET: "Auth.js sessions",
 };
 
 const OPTIONAL: Record<string, string> = {
+  TWILIO_ACCOUNT_SID: "Twilio (voix) — optionnel",
+  TWILIO_AUTH_TOKEN: "Twilio (voix) — optionnel",
   STRIPE_SECRET_KEY: "Facturation Stripe",
   STRIPE_WEBHOOK_SECRET: "Webhook Stripe",
   STRIPE_PRICE_BASE: "Plan base Stripe",

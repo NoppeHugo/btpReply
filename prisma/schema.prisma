@@ -189,13 +189,14 @@ model Conversation {
 // ---------------------------------------------------------------------------
 
 model Message {
-  id             String           @id @default(cuid())
-  clientId       String
-  conversationId String
-  direction      MessageDirection
-  body           String
-  twilioSid      String?          @unique
-  sentAt         DateTime         @default(now())
+  id                String           @id @default(cuid())
+  clientId          String
+  conversationId    String
+  direction         MessageDirection
+  body              String
+  // Identifiant du message chez le fournisseur SMS (smstools). Référentiel.
+  providerMessageId String?          @unique
+  sentAt            DateTime         @default(now())
 
   conversation Conversation @relation(fields: [conversationId], references: [id])
 
