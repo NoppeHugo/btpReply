@@ -57,7 +57,65 @@ Marc répond → le SMS arrive sur #1 **ou** #2 → on sait exactement à qui. �
 
 L'élimination est **garantie** (pas juste probable) tant que la taille du pool ≥
 au nombre max de clients qu'un *même* appelant peut avoir en conversation active
-simultanément. En pratique 3–5 numéros couvrent tous les cas réels.
+simultanément **dans la fenêtre de cooldown** (voir ci-dessous). Avec le cooldown,
+1–2 numéros suffisent en pratique.
+
+### Raffinement clé : cooldown / fenêtre d'activité
+
+La collision n'existe que **pendant la fenêtre où deux conversations du même
+appelant sont actives en même temps**. Or une conversation `qualified` **reste
+dans cet état indéfiniment** (aucune transition automatique avec le temps) — donc
+si on se base sur l'état brut, un numéro resterait bloqué pour toujours.
+
+Il faut **découpler deux notions** :
+
+| Question | Critère |
+|----------|---------|
+| Ce **lead** est-il encore pertinent ? | l'état métier (`qualified` = lead chaud, gardé tel quel pour le dashboard) |
+| Ce **numéro** est-il encore réservé à cet appelant ? | l'**activité récente** (dernier message < N jours) |
+
+La règle d'attribution devient donc :
+
+> Un numéro est « occupé » pour l'appelant **C** seulement s'il a une conversation
+> avec un **dernier message il y a moins de N jours** (cooldown, ex. **7 jours**).
+
+Concrètement, la requête de sélection filtre sur `lastMessageAt > now - N jours`
+au lieu de (ou en plus de) l'état. Après N jours sans échange, le numéro se
+**libère tout seul**, **sans toucher à l'état** de la conversation — le lead
+qualifié reste qualifié dans le dashboard.
+
+**Effet sur l'exemple** :
+
+| Scénario | Résultat |
+|----------|----------|
+| Marc appelle Dupont lundi, puis Martin **le lendemain** | chevauchement dans la fenêtre → **2 numéros** nécessaires |
+| Marc appelle Dupont, puis Martin **une semaine+ après** | conv Dupont hors fenêtre → Marc reprend le **#1** → **1 seul numéro** suffit |
+
+Résultat global : le pool ne doit couvrir que les appelants qui contactent
+**plusieurs artisans dans la même fenêtre de N jours** — cas rare. On tourne avec
+**1 à 2 numéros** + cooldown, au lieu de 3–5.
+
+> **Pré-requis** : disposer d'un horodatage d'activité par conversation. Le modèle
+> a déjà `updatedAt` (auto), mais il bouge à chaque update de la ligne (état,
+> `turnCount`…). Le plus fiable est d'ajouter un champ dédié `lastMessageAt`, mis à
+> jour à chaque message entrant/sortant.
+
+### Fallback si le pool est épuisé
+
+Si *tous* les numéros du pool sont déjà occupés pour cet appelant dans la fenêtre
+(cas très rare : le même particulier en conversation active avec autant d'artisans
+que de numéros), on **ne bloque pas l'envoi** : on **réutilise quand même un
+numéro déjà pris** — idéalement le plus « ancien » (`lastMessageAt` le plus
+lointain, donc le moins susceptible de recevoir une réponse bientôt). On accepte
+alors le risque de collision résiduel pour ce cas limite, plutôt que de rater un
+SMS. C'est un retour au comportement actuel, mais confiné à un scénario
+exceptionnel au lieu d'être le cas général.
+
+Stratégie de sélection, dans l'ordre :
+
+1. Un numéro **totalement libre** pour cet appelant dans la fenêtre → idéal.
+2. Sinon, le numéro **le moins récemment actif** avec cet appelant → fallback,
+   collision improbable.
 
 ### Bénéfice bonus
 
@@ -67,16 +125,22 @@ rattaché à un client ».
 
 ## Impact technique (à implémenter)
 
-1. **Prisma** : nouvelle table `SenderNumber` (le pool) + colonne
-   `senderNumber` sur `Conversation`.
+1. **Prisma** : nouvelle table `SenderNumber` (le pool) + colonnes `senderNumber`
+   et `lastMessageAt` sur `Conversation`.
 2. **Attribution** : à l'ouverture d'une conversation (`sendSms` / création de
-   conversation), choisir un numéro du pool libre pour cet appelant, le stocker
-   sur la conversation, et l'utiliser comme `sender`.
-3. **Routage entrant** : dans `smstools/inbound`, router par
+   conversation), choisir un numéro du pool **libre pour cet appelant dans la
+   fenêtre de cooldown** (aucune autre conversation avec `callerNumber = C` et
+   `lastMessageAt > now - N jours` sur ce numéro), le stocker sur la conversation,
+   et l'utiliser comme `sender`.
+3. **Cooldown** : `lastMessageAt` mis à jour à chaque message entrant/sortant.
+   Durée N configurable (env, ex. `SENDER_COOLDOWN_DAYS=7`).
+4. **Routage entrant** : dans `smstools/inbound`, router par
    `(senderNumber = message.receiver, callerNumber = message.sender)` au lieu de
    `sender` seul. Le webhook lit déjà `message.receiver`.
-4. **Tests** : attribution (numéro libre choisi, réutilisation du même numéro pour
-   une conversation existante), routage entrant sans ambiguïté.
+5. **Tests** : attribution (numéro libre choisi ; réutilisation du même numéro
+   pour une conversation existante ; numéro repris après expiration du cooldown ;
+   2ᵉ numéro pris si chevauchement dans la fenêtre), routage entrant sans
+   ambiguïté.
 
 ## Pré-requis côté smstools (à vérifier)
 
@@ -94,6 +158,11 @@ rattaché à un client ».
 
 ## Reco
 
-Implémenter le **pool de numéros collants** : élimination déterministe, coût
-minime (3–5 numéros), archi propre et évolutive vers « un numéro par client » plus
-tard si besoin de branding.
+Implémenter le **pool de numéros collants + cooldown d'activité** :
+
+- **Cooldown** (ex. 7 j) : un numéro se libère tout seul après N jours sans
+  échange → 1–2 numéros suffisent en pratique.
+- **Fallback** : si le pool est épuisé pour un appelant, on réutilise le numéro le
+  moins récemment actif plutôt que de rater le SMS → jamais bloquant.
+- Élimination de la collision dans ~tous les cas réels, coût minime, archi propre
+  et évolutive vers « un numéro par client » plus tard si besoin de branding.
