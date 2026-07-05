@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { ConversationState, MessageDirection } from "@/generated/prisma/client";
 import type { ConversationMessage } from "@/lib/llm/qualification";
+import { assignSenderNumber } from "@/lib/sms/sender-pool";
 
 interface GetOrCreateConversationParams {
   clientId: string;
@@ -9,27 +10,55 @@ interface GetOrCreateConversationParams {
   callerNumber: string;
 }
 
+/**
+ * Retourne la conversation du callId (créée si besoin) + son numéro expéditeur
+ * assigné (pool de numéros « collants »). Le senderNumber est fixé à la création
+ * et sert de clé de routage des SMS entrants.
+ */
 export async function getOrCreateConversation(
   params: GetOrCreateConversationParams
-): Promise<string> {
+): Promise<{ id: string; senderNumber: string }> {
   const existing = await db.conversation.findUnique({
     where: { callId: params.callId },
-    select: { id: true },
+    select: { id: true, senderNumber: true },
   });
 
-  if (existing) return existing.id;
+  if (existing) {
+    // Rattrapage : anciennes conversations sans numéro expéditeur assigné.
+    const senderNumber =
+      existing.senderNumber ??
+      (await assignAndStoreSender(existing.id, params.callerNumber));
+    return { id: existing.id, senderNumber };
+  }
 
+  const senderNumber = await assignSenderNumber(params.callerNumber);
   const conv = await db.conversation.create({
     data: {
       clientId: params.clientId,
       callId: params.callId,
       callerNumber: params.callerNumber,
+      senderNumber,
     },
     select: { id: true },
   });
 
-  logger.info({ conversationId: conv.id, clientId: params.clientId }, "Conversation créée");
-  return conv.id;
+  logger.info(
+    { conversationId: conv.id, clientId: params.clientId, senderNumber },
+    "Conversation créée"
+  );
+  return { id: conv.id, senderNumber };
+}
+
+async function assignAndStoreSender(
+  conversationId: string,
+  callerNumber: string
+): Promise<string> {
+  const senderNumber = await assignSenderNumber(callerNumber);
+  await db.conversation.update({
+    where: { id: conversationId },
+    data: { senderNumber },
+  });
+  return senderNumber;
 }
 
 interface RecordMessageParams {
@@ -54,7 +83,8 @@ export async function recordMessage(params: RecordMessageParams): Promise<string
 
   await db.conversation.update({
     where: { id: params.conversationId, clientId: params.clientId },
-    data: { turnCount: { increment: 1 }, updatedAt: new Date() },
+    // lastMessageAt : rafraîchit la fenêtre de cooldown du numéro expéditeur.
+    data: { turnCount: { increment: 1 }, lastMessageAt: new Date() },
   });
 
   return msg.id;
@@ -79,27 +109,55 @@ export async function findOpenConversationByCallerNumber(
 }
 
 /**
- * Numéro smstools partagé entre tous les clients : on ne peut pas déduire le
- * client depuis le numéro destinataire. On retrouve donc la conversation
- * ouverte la plus récente pour ce numéro appelant, tous clients confondus,
- * et on en déduit le clientId.
+ * Retrouve la conversation à laquelle rattacher un SMS entrant.
+ *
+ * Pool de numéros « collants » : le couple (numéro destinataire = `receiver`,
+ * appelant) identifie la conversation sans ambiguïté (un appelant n'a jamais
+ * deux conversations actives sur le même numéro). On route donc en priorité par
+ * ce couple, avec repli sur le routage historique par appelant seul (anciennes
+ * conversations sans senderNumber, ou receiver absent du webhook).
  */
-export async function findOpenConversationByCaller(
-  callerNumber: string
+export async function findOpenConversationForInbound(
+  callerNumber: string,
+  receiver?: string
 ): Promise<{
   id: string;
   clientId: string;
   callId: string;
   turnCount: number;
   autopilot: boolean;
+  senderNumber: string | null;
 } | null> {
+  const select = {
+    id: true,
+    clientId: true,
+    callId: true,
+    turnCount: true,
+    autopilot: true,
+    senderNumber: true,
+  };
+
+  if (receiver) {
+    const byReceiver = await db.conversation.findFirst({
+      where: {
+        callerNumber,
+        senderNumber: receiver,
+        state: { in: ["open", "qualified"] },
+      },
+      orderBy: { createdAt: "desc" },
+      select,
+    });
+    if (byReceiver) return byReceiver;
+  }
+
+  // Repli : routage historique par appelant seul.
   return db.conversation.findFirst({
     where: {
       callerNumber,
       state: { in: ["open", "qualified"] },
     },
     orderBy: { createdAt: "desc" },
-    select: { id: true, clientId: true, callId: true, turnCount: true, autopilot: true },
+    select,
   });
 }
 

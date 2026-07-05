@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import {
-  findOpenConversationByCaller,
+  findOpenConversationForInbound,
   getConversationForLLM,
   recordMessage,
   updateConversationLanguage,
@@ -54,6 +54,7 @@ export async function POST(req: NextRequest) {
   }
 
   const callerNumber = payload.message?.sender ?? "";
+  const receiver = payload.message?.receiver || undefined; // notre numéro smstools
   const messageBody = payload.message?.content ?? "";
   const providerMessageId =
     payload.message?.id != null ? String(payload.message.id) : undefined;
@@ -63,23 +64,25 @@ export async function POST(req: NextRequest) {
     return new Response("", { status: 200 });
   }
 
-  // ── Retrouver la conversation ouverte (numéro partagé → routage par appelant)
-  const conversation = await findOpenConversationByCaller(callerNumber);
+  // ── Retrouver la conversation ouverte (routage par couple receiver + appelant)
+  const conversation = await findOpenConversationForInbound(callerNumber, receiver);
 
   if (!conversation) {
-    logger.info({ callerNumber }, "SMS entrant sans conversation ouverte — ignoré");
+    logger.info({ callerNumber, receiver }, "SMS entrant sans conversation ouverte — ignoré");
     return new Response("", { status: 200 });
   }
 
   const { clientId } = conversation;
+  // Répondre depuis le numéro du fil ; repli sur le numéro par défaut si absent.
+  const from = conversation.senderNumber ?? undefined;
 
   // ── P5-T2 : traitement STOP en priorité absolue ───────────────────────
   if (messageBody.trim().toUpperCase() === "STOP") {
     await addToOptOutList(clientId, callerNumber);
     await updateConversationState(conversation.id, ConversationState.closed, clientId);
 
-    // Confirmer l'opt-out (expéditeur = numéro smstools partagé par défaut).
-    await sendSms({ to: callerNumber, body: buildStopConfirmationBody() });
+    // Confirmer l'opt-out depuis le numéro du fil.
+    await sendSms({ to: callerNumber, from, body: buildStopConfirmationBody() });
 
     logger.info({ clientId, callerNumber }, "STOP traité — opt-out confirmé");
     return new Response("", { status: 200 });
@@ -167,7 +170,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Envoyer la réponse SMS + enregistrer l'outbound ──────────────
-    const replyId = await sendSms({ to: callerNumber, body: result.reply });
+    const replyId = await sendSms({ to: callerNumber, from, body: result.reply });
 
     await recordMessage({
       clientId,

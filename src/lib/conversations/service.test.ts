@@ -6,8 +6,10 @@ vi.mock("@/lib/db", () => ({
       findUnique: vi.fn(),
       create: vi.fn(),
       findFirst: vi.fn(),
+      findMany: vi.fn(),
       update: vi.fn(),
     },
+    senderNumber: { findMany: vi.fn() },
     message: { create: vi.fn() },
   },
 }));
@@ -15,6 +17,9 @@ vi.mock("@/lib/db", () => ({
 vi.mock("@/lib/logger", () => ({
   logger: { info: vi.fn(), warn: vi.fn() },
 }));
+
+// Pool à un seul numéro : assignSenderNumber renvoie ce numéro sans arbitrage.
+process.env.SMSTOOLS_SENDER = "+320000";
 
 import {
   getOrCreateConversation,
@@ -29,39 +34,75 @@ const mockDb = db as unknown as {
     findUnique: ReturnType<typeof vi.fn>;
     create: ReturnType<typeof vi.fn>;
     findFirst: ReturnType<typeof vi.fn>;
+    findMany: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
   };
+  senderNumber: { findMany: ReturnType<typeof vi.fn> };
   message: { create: ReturnType<typeof vi.fn> };
 };
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  // Table SenderNumber vide → pool lu depuis l'env (SMSTOOLS_SENDER).
+  mockDb.senderNumber.findMany.mockResolvedValue([]);
+});
 
 describe("getOrCreateConversation", () => {
-  it("retourne l'id existant si la conversation existe déjà", async () => {
-    mockDb.conversation.findUnique.mockResolvedValue({ id: "conv-01" });
+  it("retourne l'id + senderNumber existants si la conversation existe déjà", async () => {
+    mockDb.conversation.findUnique.mockResolvedValue({
+      id: "conv-01",
+      senderNumber: "+320000",
+    });
 
-    const id = await getOrCreateConversation({
+    const result = await getOrCreateConversation({
       clientId: "c1",
       callId: "call-01",
       callerNumber: "+32477000001",
     });
 
-    expect(id).toBe("conv-01");
+    expect(result).toEqual({ id: "conv-01", senderNumber: "+320000" });
     expect(mockDb.conversation.create).not.toHaveBeenCalled();
   });
 
-  it("crée une nouvelle conversation si elle n'existe pas", async () => {
+  it("crée une nouvelle conversation avec un numéro expéditeur assigné", async () => {
     mockDb.conversation.findUnique.mockResolvedValue(null);
     mockDb.conversation.create.mockResolvedValue({ id: "conv-02" });
 
-    const id = await getOrCreateConversation({
+    const result = await getOrCreateConversation({
       clientId: "c1",
       callId: "call-02",
       callerNumber: "+32477000001",
     });
 
-    expect(id).toBe("conv-02");
-    expect(mockDb.conversation.create).toHaveBeenCalledOnce();
+    expect(result).toEqual({ id: "conv-02", senderNumber: "+320000" });
+    expect(mockDb.conversation.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ senderNumber: "+320000" }),
+      })
+    );
+  });
+
+  it("rattrape et stocke un numéro expéditeur pour une conversation ancienne sans senderNumber", async () => {
+    mockDb.conversation.findUnique.mockResolvedValue({
+      id: "conv-03",
+      senderNumber: null,
+    });
+    mockDb.conversation.update.mockResolvedValue({});
+
+    const result = await getOrCreateConversation({
+      clientId: "c1",
+      callId: "call-03",
+      callerNumber: "+32477000001",
+    });
+
+    expect(result).toEqual({ id: "conv-03", senderNumber: "+320000" });
+    expect(mockDb.conversation.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "conv-03" },
+        data: { senderNumber: "+320000" },
+      })
+    );
+    expect(mockDb.conversation.create).not.toHaveBeenCalled();
   });
 });
 

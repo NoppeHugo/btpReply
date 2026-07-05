@@ -90,12 +90,18 @@ export async function scheduleInitialSms(
         ? await buildInitialSmsBody(clientId)
         : await buildOutOfHoursSmsBody(clientId);
 
-      const providerMessageId = await sendSms({ to: callerNumber, body });
-
-      const conversationId = await getOrCreateConversation({
+      // Conversation créée d'abord : elle porte le numéro expéditeur assigné
+      // (pool de numéros « collants ») depuis lequel part ce premier SMS.
+      const { id: conversationId, senderNumber } = await getOrCreateConversation({
         clientId,
         callId,
         callerNumber,
+      });
+
+      const providerMessageId = await sendSms({
+        to: callerNumber,
+        from: senderNumber,
+        body,
       });
 
       await recordMessage({

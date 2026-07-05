@@ -33,6 +33,7 @@ export async function POST(
       id: true,
       clientId: true,
       callerNumber: true,
+      senderNumber: true,
     },
   });
 
@@ -43,11 +44,12 @@ export async function POST(
     return HTTP.forbidden();
   }
 
-  // 1. Envoi du SMS (expéditeur = numéro smstools partagé par défaut)
+  // 1. Envoi du SMS depuis le numéro expéditeur du fil (repli sur défaut si null)
   let providerMessageId: string;
   try {
     providerMessageId = await sendSms({
       to: conversation.callerNumber,
+      from: conversation.senderNumber ?? undefined,
       body: parsed.data.body,
     });
   } catch (err) {

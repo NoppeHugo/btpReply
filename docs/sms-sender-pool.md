@@ -2,6 +2,12 @@
 
 > **But** : éliminer *déterministe­ment* la collision de routage des SMS entrants,
 > sans passer à un numéro dédié par client.
+>
+> **Statut : implémenté.** Attribution + cooldown : `src/lib/sms/sender-pool.ts`.
+> Assignation à la création du fil et routage entrant : `src/lib/conversations/service.ts`
+> (`getOrCreateConversation`, `findOpenConversationForInbound`). Schéma : modèle
+> `SenderNumber` + `Conversation.senderNumber` / `Conversation.lastMessageAt`.
+> Config : `SMSTOOLS_SENDERS` (pool) et `SENDER_COOLDOWN_DAYS` (défaut 7).
 
 ## Contexte / problème
 

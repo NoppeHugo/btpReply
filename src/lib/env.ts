@@ -21,6 +21,8 @@ const OPTIONAL: Record<string, string> = {
   SENTRY_DSN: "Observabilité erreurs",
   ANTHROPIC_MODEL_QUALIFICATION: "Modèle LLM (défaut: claude-haiku-4-5-20251001)",
   INITIAL_SMS_DELAY_MS: "Délai SMS initial (défaut: 30000)",
+  SMSTOOLS_SENDERS: "Pool de numéros expéditeurs (séparés par des virgules) — optionnel",
+  SENDER_COOLDOWN_DAYS: "Fenêtre de réservation d'un numéro par appelant (défaut: 7 jours)",
   SMTP_HOST: "Serveur SMTP (emails) — optionnel",
   SMTP_USER: "Utilisateur SMTP — optionnel",
   SMTP_PASS: "Mot de passe SMTP — optionnel",
