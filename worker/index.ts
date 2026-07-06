@@ -4,6 +4,7 @@ import cron from "node-cron";
 import { validateEnv } from "../src/lib/env";
 import { runDailyRecap } from "./jobs/dailyRecap";
 import { runRgpdPurge } from "./jobs/rgpdPurge";
+import { runInboundQueue } from "../src/lib/conversations/inbound-queue";
 
 // Sentry — initialiser avant tout le reste
 Sentry.init({
@@ -33,5 +34,22 @@ cron.schedule(
   },
   { timezone: "Europe/Brussels" }
 );
+
+// File des SMS entrants — drainée toutes les 5 s. Le webhook smstools acquitte
+// immédiatement et met en file ; la qualification LLM (lente) s'exécute ici,
+// hors du chemin de la requête HTTP. Garde anti-chevauchement : un tick lent
+// (LLM) ne doit pas se superposer au suivant.
+let inboundQueueRunning = false;
+cron.schedule("*/5 * * * * *", async () => {
+  if (inboundQueueRunning) return;
+  inboundQueueRunning = true;
+  try {
+    await runInboundQueue();
+  } catch (err) {
+    Sentry.captureException(err);
+  } finally {
+    inboundQueueRunning = false;
+  }
+});
 
 console.log("Worker démarré — crons actifs");

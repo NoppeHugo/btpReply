@@ -13,8 +13,8 @@
 Phase en cours    : P8 — Pilote & mise en production (P8-T2 et P8-T4 manuelles)
 Dernière tâche OK : P8-T3
 Prochaine tâche   : P8-T2 (manuel — déployer chez le 1er client)
-Bloqueurs         : P0-T3 bloquée — migration à relancer avec `pnpm db:migrate` quand Docker tourne. P1-T1 manuelle — acheter numéro Twilio +32 et configurer le webhook URL
-Mis à jour le     : 2026-06-30
+Bloqueurs         : P1-T1 manuelle — acheter numéro Twilio +32 (voix) et configurer le webhook URL
+Mis à jour le     : 2026-07-06
 ```
 
 ---
@@ -33,7 +33,7 @@ Mis à jour le     : 2026-06-30
 
 - ☑ **P0-T1** Initialiser le repo (pnpm, TypeScript strict, Next.js App Router, Tailwind + shadcn/ui).
 - ☑ **P0-T2** Mettre en place Prisma + `schema.prisma` (toutes les tables du modèle de `techStack.md §3`).
-- ☐ **P0-T3** Connecter docker et DB SQL+ première migration.
+- ☑ **P0-T3** Connecter docker et DB SQL+ première migration.
 - ☑ **P0-T4** Worker séparé (`/worker`) avec un cron vide qui démarre.
 - ☑ **P0-T5** Dockeriser (`app` + `worker`) + Docker Compose + Caddy.
 - ☑ **P0-T6** Pipeline GitHub Actions (lint + test + build) + déploiement VPS Hetzner EU.

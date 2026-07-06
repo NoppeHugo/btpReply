@@ -52,6 +52,13 @@ enum MessageChannel {
   in_app
 }
 
+enum InboundJobStatus {
+  pending
+  processing
+  done
+  failed
+}
+
 enum DayOfWeek {
   monday
   tuesday
@@ -206,6 +213,31 @@ model SenderNumber {
   createdAt DateTime @default(now())
 
   @@map("sender_numbers")
+}
+
+// ---------------------------------------------------------------------------
+// InboundSmsJob (file d'attente des SMS entrants à qualifier)
+// ---------------------------------------------------------------------------
+// Le webhook smstools acquitte immédiatement (HTTP 200) et met le SMS en file ;
+// le worker draine la file et exécute le pipeline de qualification LLM hors du
+// chemin de la requête HTTP. Découple la latence LLM du webhook (évite les
+// timeouts → retries) et rend le traitement rejouable. `providerMessageId` est
+// unique : les retries webhook de smstools ne créent pas de doublon de job.
+
+model InboundSmsJob {
+  id                String           @id @default(cuid())
+  providerMessageId String?          @unique
+  callerNumber      String
+  receiver          String? // notre numéro smstools destinataire (routage)
+  body              String
+  status            InboundJobStatus @default(pending)
+  attempts          Int              @default(0)
+  lastError         String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@index([status, createdAt])
+  @@map("inbound_sms_jobs")
 }
 
 // ---------------------------------------------------------------------------

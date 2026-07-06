@@ -69,6 +69,22 @@ interface RecordMessageParams {
   providerMessageId?: string;
 }
 
+/**
+ * Idempotence webhook : indique si un message entrant portant ce
+ * `providerMessageId` a déjà été enregistré. smstools retente ses webhooks en
+ * cas de timeout ; sans cette garde, le même SMS déclencherait une seconde
+ * qualification LLM et un second SMS de réponse au client.
+ */
+export async function messageExistsByProviderId(
+  providerMessageId: string
+): Promise<boolean> {
+  const existing = await db.message.findUnique({
+    where: { providerMessageId },
+    select: { id: true },
+  });
+  return existing !== null;
+}
+
 export async function recordMessage(params: RecordMessageParams): Promise<string> {
   const msg = await db.message.create({
     data: {
