@@ -7,6 +7,7 @@ import { getAuthedUser } from "@/lib/api/auth";
 const postSchema = z.object({
   number: z.string().min(6),
   label: z.string().optional(),
+  source: z.enum(["manual", "passive"]).optional(),
 });
 
 // GET /api/v1/config/whitelist
@@ -34,6 +35,7 @@ export async function POST(req: NextRequest) {
   const parsed = postSchema.safeParse(body);
   if (!parsed.success) return HTTP.badRequest(parsed.error.issues[0]?.message);
 
+  const source = parsed.data.source ?? "manual";
   const entry = await db.whitelistEntry.upsert({
     where: {
       clientId_number: { clientId: user.clientId, number: parsed.data.number },
@@ -43,6 +45,7 @@ export async function POST(req: NextRequest) {
       clientId: user.clientId,
       number: parsed.data.number,
       label: parsed.data.label,
+      source,
     },
     select: { id: true, number: true, label: true, createdAt: true },
   });

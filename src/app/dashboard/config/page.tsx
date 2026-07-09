@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { ContactImport } from "@/components/ContactImport";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -505,6 +506,7 @@ export default function ConfigPage() {
       <h1 className="mb-6 app-h1">Configuration</h1>
       <div className="space-y-6">
         <SettingsSection />
+        <ContactImport />
         <BusinessHoursSection />
         <WhitelistSection />
         <TemplatesSection />

@@ -25,8 +25,8 @@ export async function addToOptOutList(
 ): Promise<void> {
   await db.whitelistEntry.upsert({
     where: { clientId_number: { clientId, number } },
-    create: { clientId, number, label: "opted_out" },
-    update: { label: "opted_out" },
+    create: { clientId, number, label: "opted_out", source: "opt_out" },
+    update: { label: "opted_out", source: "opt_out" },
   });
 
   logger.info({ clientId, number }, "Numéro ajouté à la liste d'opt-out (STOP)");

@@ -85,6 +85,8 @@ model Client {
   initialSmsDelaySec Int       @default(30)
   alertEmail         String?
   alertPhone         String?
+  // Onboarding artisan terminé (import contacts + install PWA). Null = à faire.
+  onboardingCompletedAt DateTime?
   createdAt        DateTime    @default(now())
   updatedAt        DateTime    @updatedAt
 
@@ -298,6 +300,9 @@ model WhitelistEntry {
   clientId  String
   number    String
   label     String?
+  // Origine de l'exclusion : manual (saisie) | contacts_import (répertoire) |
+  // passive (bouton « je connais ce numéro ») | opt_out (STOP).
+  source    String   @default("manual")
   createdAt DateTime @default(now())
 
   client Client @relation(fields: [clientId], references: [id])

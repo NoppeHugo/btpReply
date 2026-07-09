@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import Link from "next/link";
+import { KnownNumberButton } from "@/components/KnownNumberButton";
 
 const STATE_LABEL: Record<string, string> = {
   open: "En cours",
@@ -94,16 +95,24 @@ export default async function CallsPage() {
                 </div>
               </div>
             );
-            return call.conversation ? (
-              <Link
-                key={call.id}
-                href={`/dashboard/conversations/${call.conversation.id}`}
-                className="block transition-colors hover:opacity-80"
-              >
-                {card}
-              </Link>
-            ) : (
-              <div key={call.id}>{card}</div>
+            return (
+              <div key={call.id}>
+                {call.conversation ? (
+                  <Link
+                    href={`/dashboard/conversations/${call.conversation.id}`}
+                    className="block transition-colors hover:opacity-80"
+                  >
+                    {card}
+                  </Link>
+                ) : (
+                  card
+                )}
+                {session.user.role !== "admin" && (
+                  <div className="mt-1 pl-1">
+                    <KnownNumberButton number={call.callerNumber} />
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
@@ -165,14 +174,19 @@ export default async function CallsPage() {
                     </td>
                     <td className="app-td text-white/60">{lead?.status ?? "—"}</td>
                     <td className="app-td">
-                      {call.conversation && (
-                        <Link
-                          href={`/dashboard/conversations/${call.conversation.id}`}
-                          className="text-xs font-medium text-amber-400 hover:underline"
-                        >
-                          Voir →
-                        </Link>
-                      )}
+                      <div className="flex items-center gap-3">
+                        {call.conversation && (
+                          <Link
+                            href={`/dashboard/conversations/${call.conversation.id}`}
+                            className="text-xs font-medium text-amber-400 hover:underline"
+                          >
+                            Voir →
+                          </Link>
+                        )}
+                        {session.user.role !== "admin" && (
+                          <KnownNumberButton number={call.callerNumber} />
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
