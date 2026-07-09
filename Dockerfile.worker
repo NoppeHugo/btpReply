@@ -12,4 +12,7 @@ ENV NODE_ENV=production
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN pnpm exec prisma generate
-CMD ["node", "--import", "tsx/esm", "worker/index.ts"]
+# tsx (registre complet, transpile en CJS) et non tsx/esm : le chargeur ESM pur
+# déclenche ERR_REQUIRE_CYCLE_MODULE sur Node ≥ 22.12 (require(esm) en cycle),
+# alors qu'aucun cycle source n'existe. Le registre complet évite ce chemin.
+CMD ["node", "--import", "tsx", "worker/index.ts"]
