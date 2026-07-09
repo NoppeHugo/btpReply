@@ -71,7 +71,7 @@ interface RecordMessageParams {
 
 /**
  * Idempotence webhook : indique si un message entrant portant ce
- * `providerMessageId` a déjà été enregistré. smstools retente ses webhooks en
+ * `providerMessageId` a déjà été enregistré. Twilio retente ses webhooks en
  * cas de timeout ; sans cette garde, le même SMS déclencherait une seconde
  * qualification LLM et un second SMS de réponse au client.
  */
@@ -143,6 +143,7 @@ export async function findOpenConversationForInbound(
   turnCount: number;
   autopilot: boolean;
   senderNumber: string | null;
+  state: ConversationState;
 } | null> {
   const select = {
     id: true,
@@ -151,15 +152,23 @@ export async function findOpenConversationForInbound(
     turnCount: true,
     autopilot: true,
     senderNumber: true,
+    state: true,
+  };
+
+  // On route aussi les états `qualified` et `handed_off` : un message reçu après
+  // qualification ou transmission doit être capturé (pas perdu) et signalé au
+  // patron. Seul `closed` (STOP) n'est jamais routé.
+  const routableStates = {
+    in: [
+      ConversationState.open,
+      ConversationState.qualified,
+      ConversationState.handed_off,
+    ],
   };
 
   if (receiver) {
     const byReceiver = await db.conversation.findFirst({
-      where: {
-        callerNumber,
-        senderNumber: receiver,
-        state: { in: ["open", "qualified"] },
-      },
+      where: { callerNumber, senderNumber: receiver, state: routableStates },
       orderBy: { createdAt: "desc" },
       select,
     });
@@ -168,10 +177,7 @@ export async function findOpenConversationForInbound(
 
   // Repli : routage historique par appelant seul.
   return db.conversation.findFirst({
-    where: {
-      callerNumber,
-      state: { in: ["open", "qualified"] },
-    },
+    where: { callerNumber, state: routableStates },
     orderBy: { createdAt: "desc" },
     select,
   });

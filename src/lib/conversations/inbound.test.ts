@@ -10,7 +10,10 @@ vi.mock("@/lib/conversations/service", () => ({
 }));
 vi.mock("@/lib/llm/qualification", () => ({ qualifyMessage: vi.fn() }));
 vi.mock("@/lib/leads/service", () => ({ upsertLead: vi.fn() }));
-vi.mock("@/lib/alerts/service", () => ({ sendLeadAlert: vi.fn() }));
+vi.mock("@/lib/alerts/service", () => ({
+  sendLeadAlert: vi.fn(),
+  sendInboundMessageAlert: vi.fn(),
+}));
 vi.mock("@/lib/sms/service", () => ({
   sendSms: vi.fn(),
   buildStopConfirmationBody: vi.fn(() => "STOP-OK"),
@@ -33,6 +36,7 @@ import {
 } from "@/lib/conversations/service";
 import { qualifyMessage } from "@/lib/llm/qualification";
 import { sendSms } from "@/lib/sms/service";
+import { sendInboundMessageAlert } from "@/lib/alerts/service";
 import { isNumberExcluded, addToOptOutList } from "@/lib/whitelist/service";
 
 const mocked = {
@@ -42,6 +46,7 @@ const mocked = {
   record: recordMessage as ReturnType<typeof vi.fn>,
   qualify: qualifyMessage as ReturnType<typeof vi.fn>,
   send: sendSms as ReturnType<typeof vi.fn>,
+  inboundAlert: sendInboundMessageAlert as ReturnType<typeof vi.fn>,
   excluded: isNumberExcluded as ReturnType<typeof vi.fn>,
   optOut: addToOptOutList as ReturnType<typeof vi.fn>,
 };
@@ -53,6 +58,7 @@ const openConv = {
   turnCount: 1,
   autopilot: true,
   senderNumber: "+320000",
+  state: "open",
 };
 
 beforeEach(() => {
@@ -65,7 +71,7 @@ beforeEach(() => {
 });
 
 describe("processInboundSms — idempotence", () => {
-  it("ignore un message déjà traité sans effet de bord (retry smstools)", async () => {
+  it("ignore un message déjà traité sans effet de bord (retry Twilio)", async () => {
     mocked.msgExists.mockResolvedValue(true);
 
     const outcome = await processInboundSms({
@@ -163,6 +169,34 @@ describe("processInboundSms — chemins prioritaires", () => {
     });
     expect(outcome).toBe("manual");
     expect(mocked.record).toHaveBeenCalledOnce();
+    expect(mocked.qualify).not.toHaveBeenCalled();
+  });
+
+  it("conversation qualifiée → message enregistré + patron alerté, pas de bot", async () => {
+    mocked.findConv.mockResolvedValue({ ...openConv, state: "qualified" });
+    const outcome = await processInboundSms({
+      callerNumber: "+32477000001",
+      messageBody: "Une precision",
+    });
+    expect(outcome).toBe("notified");
+    expect(mocked.record).toHaveBeenCalledOnce();
+    expect(mocked.qualify).not.toHaveBeenCalled();
+    expect(mocked.inboundAlert).toHaveBeenCalledWith("c1", "+32477000001", "Une precision", false);
+  });
+
+  it("conversation transmise (handed_off) → alerte patron avec afterHandoff=true", async () => {
+    mocked.findConv.mockResolvedValue({ ...openConv, state: "handed_off" });
+    const outcome = await processInboundSms({
+      callerNumber: "+32477000001",
+      messageBody: "Vous me rappelez quand ?",
+    });
+    expect(outcome).toBe("notified");
+    expect(mocked.inboundAlert).toHaveBeenCalledWith(
+      "c1",
+      "+32477000001",
+      "Vous me rappelez quand ?",
+      true
+    );
     expect(mocked.qualify).not.toHaveBeenCalled();
   });
 });

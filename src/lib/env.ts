@@ -1,19 +1,16 @@
 const REQUIRED: Record<string, string> = {
   DATABASE_URL: "Connexion PostgreSQL",
   ANTHROPIC_API_KEY: "Qualification LLM",
-  SMSTOOLS_CLIENT_ID: "API smstools (X-Client-Id)",
-  SMSTOOLS_CLIENT_SECRET: "API smstools (X-Client-Secret)",
-  SMSTOOLS_SENDER: "Numéro/expéditeur SMS smstools",
-  SMSTOOLS_WEBHOOK_SECRET: "Token de sécurité du webhook SMS entrant",
-  TWILIO_WEBHOOK_SIGNING_KEY: "Signature webhook voice Twilio",
+  TWILIO_ACCOUNT_SID: "API Twilio (Account SID) — envoi SMS + voix",
+  TWILIO_AUTH_TOKEN: "API Twilio (Auth Token) — envoi SMS + voix",
+  TWILIO_SENDER: "Numéro/expéditeur SMS Twilio (E.164)",
+  TWILIO_WEBHOOK_SIGNING_KEY: "Signature webhooks Twilio (voix + SMS entrant)",
   APP_BASE_URL: "URL de l'application",
   API_SECRET_KEY: "Auth API bearer",
   AUTH_SECRET: "Auth.js sessions",
 };
 
 const OPTIONAL: Record<string, string> = {
-  TWILIO_ACCOUNT_SID: "Twilio (voix) — optionnel",
-  TWILIO_AUTH_TOKEN: "Twilio (voix) — optionnel",
   STRIPE_SECRET_KEY: "Facturation Stripe",
   STRIPE_WEBHOOK_SECRET: "Webhook Stripe",
   STRIPE_PRICE_BASE: "Plan base Stripe",
@@ -21,7 +18,7 @@ const OPTIONAL: Record<string, string> = {
   SENTRY_DSN: "Observabilité erreurs",
   ANTHROPIC_MODEL_QUALIFICATION: "Modèle LLM (défaut: claude-haiku-4-5-20251001)",
   INITIAL_SMS_DELAY_MS: "Délai SMS initial (défaut: 30000)",
-  SMSTOOLS_SENDERS: "Pool de numéros expéditeurs (séparés par des virgules) — optionnel",
+  TWILIO_SENDERS: "Pool de numéros expéditeurs Twilio (séparés par des virgules) — optionnel",
   SENDER_COOLDOWN_DAYS: "Fenêtre de réservation d'un numéro par appelant (défaut: 7 jours)",
   SMTP_HOST: "Serveur SMTP (emails) — optionnel",
   SMTP_USER: "Utilisateur SMTP — optionnel",

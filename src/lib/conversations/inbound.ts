@@ -8,7 +8,7 @@ import {
 } from "@/lib/conversations/service";
 import { qualifyMessage } from "@/lib/llm/qualification";
 import { upsertLead } from "@/lib/leads/service";
-import { sendLeadAlert } from "@/lib/alerts/service";
+import { sendLeadAlert, sendInboundMessageAlert } from "@/lib/alerts/service";
 import { sendSms, buildStopConfirmationBody } from "@/lib/sms/service";
 import { isNumberExcluded, addToOptOutList } from "@/lib/whitelist/service";
 import { detectLanguage } from "@/lib/language/detect";
@@ -17,25 +17,26 @@ import { ConversationState, MessageDirection } from "@/generated/prisma/client";
 
 export interface InboundSmsInput {
   callerNumber: string;
-  // Notre numéro smstools destinataire (clé de routage du pool « collant »).
+  // Notre numéro Twilio destinataire (clé de routage du pool « collant »).
   receiver?: string;
   messageBody: string;
-  // Identifiant du message chez smstools — clé d'idempotence.
+  // Identifiant du message chez Twilio (MessageSid) — clé d'idempotence.
   providerMessageId?: string;
 }
 
 /**
  * Issue du traitement d'un SMS entrant. Toutes les valeurs correspondent à un
  * webhook correctement acquitté (HTTP 200) : le webhook ne doit jamais renvoyer
- * une erreur qui pousserait smstools à retenter.
+ * une erreur qui pousserait Twilio à retenter.
  */
 export type InboundSmsOutcome =
-  | "duplicate" // déjà traité (retry smstools) — ignoré
+  | "duplicate" // déjà traité (retry Twilio) — ignoré
   | "no_caller" // pas d'expéditeur — ignoré
   | "no_conversation" // aucune conversation ouverte — ignoré
   | "stopped" // STOP traité — opt-out confirmé
   | "excluded" // numéro en liste blanche — ignoré
   | "manual" // conversation en mode manuel — message enregistré, pas de bot
+  | "notified" // état terminal (qualified/handed_off) — message enregistré + patron alerté
   | "recorded" // enregistré mais qualification impossible (pas de message LLM)
   | "qualified"; // pipeline de qualification complet
 
@@ -54,7 +55,7 @@ export async function processInboundSms(
   const { callerNumber, receiver, messageBody, providerMessageId } = input;
 
   if (!callerNumber) {
-    logger.warn("SMS entrant smstools sans expéditeur — ignoré");
+    logger.warn("SMS entrant Twilio sans expéditeur — ignoré");
     return "no_caller";
   }
 
@@ -65,7 +66,7 @@ export async function processInboundSms(
   if (providerMessageId && (await messageExistsByProviderId(providerMessageId))) {
     logger.info(
       { providerMessageId, callerNumber },
-      "SMS entrant déjà traité (retry smstools) — ignoré"
+      "SMS entrant déjà traité (retry Twilio) — ignoré"
     );
     return "duplicate";
   }
@@ -120,6 +121,26 @@ export async function processInboundSms(
       "Conversation en mode manuel — message enregistré, qualification auto ignorée"
     );
     return "manual";
+  }
+
+  // ── B/D : objectif déjà atteint (qualified) ou transmis (handed_off) ──
+  // Le bot ne relance pas la qualification : on a enregistré le message (fin de
+  // la perte de données) et on alerte le patron, à lui de reprendre le fil.
+  if (
+    conversation.state === ConversationState.qualified ||
+    conversation.state === ConversationState.handed_off
+  ) {
+    await sendInboundMessageAlert(
+      clientId,
+      callerNumber,
+      messageBody,
+      conversation.state === ConversationState.handed_off
+    );
+    logger.info(
+      { conversationId: conversation.id, clientId, state: conversation.state },
+      "Message reçu sur conversation terminée — enregistré, patron alerté, pas d'auto-réponse"
+    );
+    return "notified";
   }
 
   logger.info(

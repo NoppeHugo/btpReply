@@ -24,14 +24,14 @@ export type EnqueueResult = "enqueued" | "duplicate" | "no_caller";
 
 /**
  * Met un SMS entrant en file. Idempotent : un `providerMessageId` déjà en file
- * (retry webhook de smstools) n'est pas ré-enfilé. Ne lève jamais pour un
+ * (retry webhook de Twilio) n'est pas ré-enfilé. Ne lève jamais pour un
  * doublon afin que le webhook acquitte toujours (HTTP 200).
  */
 export async function enqueueInboundSms(
   input: EnqueueInboundInput
 ): Promise<EnqueueResult> {
   if (!input.callerNumber) {
-    logger.warn("SMS entrant smstools sans expéditeur — non mis en file");
+    logger.warn("SMS entrant Twilio sans expéditeur — non mis en file");
     return "no_caller";
   }
 
@@ -44,7 +44,7 @@ export async function enqueueInboundSms(
     if (existing) {
       logger.info(
         { providerMessageId: input.providerMessageId },
-        "SMS entrant déjà en file (retry smstools) — ignoré"
+        "SMS entrant déjà en file (retry Twilio) — ignoré"
       );
       return "duplicate";
     }

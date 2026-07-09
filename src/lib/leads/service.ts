@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { LeadUrgency } from "@/generated/prisma/client";
+import { LeadStatus, LeadUrgency } from "@/generated/prisma/client";
 import { logger } from "@/lib/logger";
 
 interface UpsertLeadParams {
@@ -11,6 +11,10 @@ interface UpsertLeadParams {
   location: string | null;
   availability: string | null;
   summary: string;
+  // Lead partiel (conversation abandonnée) — voir schema.prisma. Appliqué à la
+  // création uniquement pour ne pas écraser un lead qualifié existant.
+  partial?: boolean;
+  status?: LeadStatus;
 }
 
 export async function upsertLead(params: UpsertLeadParams): Promise<string> {
@@ -30,6 +34,8 @@ export async function upsertLead(params: UpsertLeadParams): Promise<string> {
       location: params.location,
       availability: params.availability,
       summary: params.summary,
+      partial: params.partial ?? false,
+      ...(params.status ? { status: params.status } : {}),
     },
     update: {
       type: params.type,

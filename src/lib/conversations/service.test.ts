@@ -19,7 +19,7 @@ vi.mock("@/lib/logger", () => ({
 }));
 
 // Pool à un seul numéro : assignSenderNumber renvoie ce numéro sans arbitrage.
-process.env.SMSTOOLS_SENDER = "+320000";
+process.env.TWILIO_SENDER = "+320000";
 
 import {
   getOrCreateConversation,
@@ -43,7 +43,7 @@ const mockDb = db as unknown as {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  // Table SenderNumber vide → pool lu depuis l'env (SMSTOOLS_SENDER).
+  // Table SenderNumber vide → pool lu depuis l'env (TWILIO_SENDER).
   mockDb.senderNumber.findMany.mockResolvedValue([]);
 });
 

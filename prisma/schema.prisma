@@ -173,7 +173,7 @@ model Conversation {
   clientId     String
   callId       String            @unique
   callerNumber String
-  // Numéro expéditeur smstools assigné à ce fil (pool de numéros « collants »).
+  // Numéro expéditeur Twilio assigné à ce fil (pool de numéros « collants »).
   // Sert de clé de routage des SMS entrants : (senderNumber = receiver, callerNumber).
   senderNumber String?
   state        ConversationState @default(open)
@@ -198,12 +198,12 @@ model Conversation {
 }
 
 // ---------------------------------------------------------------------------
-// SenderNumber (pool de numéros expéditeurs smstools partagés)
+// SenderNumber (pool de numéros expéditeurs Twilio partagés)
 // ---------------------------------------------------------------------------
 // Le routage des SMS entrants se fait par (senderNumber = receiver, appelant).
 // Un numéro est réservé à un appelant tant qu'une conversation reste active dans
 // la fenêtre de cooldown, ce qui élimine les collisions de routage. Table
-// optionnelle : si vide, le pool est lu depuis l'env (SMSTOOLS_SENDERS / SMSTOOLS_SENDER).
+// optionnelle : si vide, le pool est lu depuis l'env (TWILIO_SENDERS / TWILIO_SENDER).
 
 model SenderNumber {
   id        String   @id @default(cuid())
@@ -218,17 +218,17 @@ model SenderNumber {
 // ---------------------------------------------------------------------------
 // InboundSmsJob (file d'attente des SMS entrants à qualifier)
 // ---------------------------------------------------------------------------
-// Le webhook smstools acquitte immédiatement (HTTP 200) et met le SMS en file ;
+// Le webhook Twilio acquitte immédiatement (HTTP 200) et met le SMS en file ;
 // le worker draine la file et exécute le pipeline de qualification LLM hors du
 // chemin de la requête HTTP. Découple la latence LLM du webhook (évite les
 // timeouts → retries) et rend le traitement rejouable. `providerMessageId` est
-// unique : les retries webhook de smstools ne créent pas de doublon de job.
+// unique : les retries webhook de Twilio ne créent pas de doublon de job.
 
 model InboundSmsJob {
   id                String           @id @default(cuid())
   providerMessageId String?          @unique
   callerNumber      String
-  receiver          String? // notre numéro smstools destinataire (routage)
+  receiver          String? // notre numéro Twilio destinataire (routage)
   body              String
   status            InboundJobStatus @default(pending)
   attempts          Int              @default(0)
@@ -250,7 +250,7 @@ model Message {
   conversationId    String
   direction         MessageDirection
   body              String
-  // Identifiant du message chez le fournisseur SMS (smstools). Référentiel.
+  // Identifiant du message chez le fournisseur SMS (Twilio MessageSid). Référentiel.
   providerMessageId String?          @unique
   sentAt            DateTime         @default(now())
 
@@ -275,6 +275,10 @@ model Lead {
   availability   String?
   summary        String
   status         LeadStatus  @default(new)
+  // true = lead partiel généré par le balayage des conversations abandonnées
+  // (le client a commencé à répondre puis n'a pas terminé). Exclu du compteur
+  // « leads qualifiés » du récap, mais signalé pour rappel.
+  partial        Boolean     @default(false)
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 

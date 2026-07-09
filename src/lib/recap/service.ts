@@ -41,13 +41,15 @@ export async function buildClientRecap(
     }),
   ]);
 
-  // P4-T3 : leads qualifiés aujourd'hui / ce mois
+  // P4-T3 : leads qualifiés aujourd'hui / ce mois.
+  // `partial: false` → les leads partiels (conversations abandonnées) ne gonflent
+  // pas le compteur ROI ; ils restent visibles via `toCallback` et la liste.
   const [todayLeads, monthLeads] = await Promise.all([
     db.lead.count({
-      where: { clientId, createdAt: { gte: dayStart, lte: dayEnd } },
+      where: { clientId, partial: false, createdAt: { gte: dayStart, lte: dayEnd } },
     }),
     db.lead.count({
-      where: { clientId, createdAt: { gte: monthStart, lte: monthEnd } },
+      where: { clientId, partial: false, createdAt: { gte: monthStart, lte: monthEnd } },
     }),
   ]);
 
@@ -55,6 +57,30 @@ export async function buildClientRecap(
   const toCallback = await db.lead.count({
     where: { clientId, status: "to_callback" },
   });
+
+  // Liste détaillée des leads du jour (pour rappel direct depuis l'email).
+  // Les urgents d'abord (enum trié high→low en desc), puis les plus récents.
+  const leadRows = await db.lead.findMany({
+    where: { clientId, createdAt: { gte: dayStart, lte: dayEnd } },
+    orderBy: [{ urgency: "desc" }, { createdAt: "desc" }],
+    select: {
+      type: true,
+      urgency: true,
+      summary: true,
+      status: true,
+      partial: true,
+      conversation: { select: { callerNumber: true } },
+    },
+  });
+
+  const leads = leadRows.map((l) => ({
+    callerNumber: l.conversation.callerNumber,
+    type: l.type,
+    urgency: l.urgency,
+    summary: l.summary,
+    status: l.status,
+    partial: l.partial,
+  }));
 
   // Label de date lisible en FR (ex: "lundi 30 juin 2026")
   const dateLabel = now.toLocaleDateString("fr-BE", {
@@ -76,6 +102,7 @@ export async function buildClientRecap(
         leadsQualified: todayLeads,
         leadsToCallback: toCallback,
       },
+      leads,
       month: {
         callsCaptured: monthCalls,
         leadsQualified: monthLeads,

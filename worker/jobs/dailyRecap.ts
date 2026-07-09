@@ -16,12 +16,26 @@ export async function runDailyRecap(): Promise<void> {
   });
 
   let sent = 0;
+  let skipped = 0;
   let errors = 0;
 
   for (const { id: clientId } of clients) {
     try {
       const payload = await buildClientRecap(clientId, now);
       if (!payload) continue;
+
+      // Ne pas spammer les jours creux : on saute si aucune activité du jour et
+      // aucun rappel en attente. Le patron n'est alerté que quand il y a de quoi.
+      const t = payload.data.today;
+      const hasActivity =
+        t.callsCaptured > 0 ||
+        t.leadsQualified > 0 ||
+        t.leadsToCallback > 0 ||
+        payload.data.leads.length > 0;
+      if (!hasActivity) {
+        skipped++;
+        continue;
+      }
 
       const { subject, html } = buildDailyRecapEmail(payload.data);
 
@@ -42,5 +56,8 @@ export async function runDailyRecap(): Promise<void> {
     }
   }
 
-  logger.info({ sent, errors, total: clients.length }, "Récap quotidien terminé");
+  logger.info(
+    { sent, skipped, errors, total: clients.length },
+    "Récap quotidien terminé"
+  );
 }

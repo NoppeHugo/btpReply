@@ -56,6 +56,7 @@ describe("buildDailyRecapEmail", () => {
       clientName: "Plomberie Martin",
       dateLabel: "lundi 30 juin 2026",
       today: { callsCaptured: 5, leadsQualified: 3, leadsToCallback: 1 },
+      leads: [],
       month: { callsCaptured: 47, leadsQualified: 31 },
     });
 
@@ -65,5 +66,39 @@ describe("buildDailyRecapEmail", () => {
     expect(html).toContain("31");
     expect(html).toContain("En attente de rappel");
     expect(html).toContain("1");
+  });
+
+  it("liste les leads du jour avec numéro, type et badges", () => {
+    const { html } = buildDailyRecapEmail({
+      clientName: "Plomberie Martin",
+      dateLabel: "lundi 30 juin 2026",
+      today: { callsCaptured: 2, leadsQualified: 1, leadsToCallback: 1 },
+      leads: [
+        {
+          callerNumber: "+32477000001",
+          type: "plomberie",
+          urgency: "high",
+          summary: "Fuite sous l'évier.",
+          status: "new",
+          partial: false,
+        },
+        {
+          callerNumber: "+32477000002",
+          type: null,
+          urgency: null,
+          summary: "Conversation incomplète.",
+          status: "to_callback",
+          partial: true,
+        },
+      ],
+      month: { callsCaptured: 47, leadsQualified: 31 },
+    });
+
+    expect(html).toContain("Leads du jour");
+    expect(html).toContain("+32477000001");
+    expect(html).toContain("plomberie");
+    expect(html).toContain("Urgence Élevée");
+    expect(html).toContain("À compléter"); // badge du lead partiel
+    expect(html).toContain("tel:+32477000002"); // lien cliquable
   });
 });

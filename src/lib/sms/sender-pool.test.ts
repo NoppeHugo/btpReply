@@ -18,8 +18,8 @@ const mockDb = db as unknown as {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  delete process.env.SMSTOOLS_SENDERS;
-  delete process.env.SMSTOOLS_SENDER;
+  delete process.env.TWILIO_SENDERS;
+  delete process.env.TWILIO_SENDER;
   mockDb.senderNumber.findMany.mockResolvedValue([]);
   mockDb.conversation.findMany.mockResolvedValue([]);
 });
@@ -30,17 +30,17 @@ describe("getSenderPool", () => {
       { number: "+321" },
       { number: "+322" },
     ]);
-    process.env.SMSTOOLS_SENDER = "+329"; // ignoré car la table n'est pas vide
+    process.env.TWILIO_SENDER = "+329"; // ignoré car la table n'est pas vide
     expect(await getSenderPool()).toEqual(["+321", "+322"]);
   });
 
-  it("retombe sur SMSTOOLS_SENDERS (séparés par virgules) si la table est vide", async () => {
-    process.env.SMSTOOLS_SENDERS = "+321, +322 ,+323";
+  it("retombe sur TWILIO_SENDERS (séparés par virgules) si la table est vide", async () => {
+    process.env.TWILIO_SENDERS = "+321, +322 ,+323";
     expect(await getSenderPool()).toEqual(["+321", "+322", "+323"]);
   });
 
-  it("retombe sur SMSTOOLS_SENDER unique si rien d'autre", async () => {
-    process.env.SMSTOOLS_SENDER = "+329";
+  it("retombe sur TWILIO_SENDER unique si rien d'autre", async () => {
+    process.env.TWILIO_SENDER = "+329";
     expect(await getSenderPool()).toEqual(["+329"]);
   });
 });
@@ -51,7 +51,7 @@ describe("assignSenderNumber", () => {
   });
 
   it("renvoie l'unique numéro sans interroger les conversations (pool = 1)", async () => {
-    process.env.SMSTOOLS_SENDER = "+329";
+    process.env.TWILIO_SENDER = "+329";
     const chosen = await assignSenderNumber("+32477000001");
     expect(chosen).toBe("+329");
     expect(mockDb.conversation.findMany).not.toHaveBeenCalled();

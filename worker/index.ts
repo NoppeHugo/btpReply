@@ -5,6 +5,7 @@ import { validateEnv } from "../src/lib/env";
 import { runDailyRecap } from "./jobs/dailyRecap";
 import { runRgpdPurge } from "./jobs/rgpdPurge";
 import { runInboundQueue } from "../src/lib/conversations/inbound-queue";
+import { sweepAbandonedConversations } from "../src/lib/conversations/stale";
 
 // Sentry — initialiser avant tout le reste
 Sentry.init({
@@ -35,7 +36,22 @@ cron.schedule(
   { timezone: "Europe/Brussels" }
 );
 
-// File des SMS entrants — drainée toutes les 5 s. Le webhook smstools acquitte
+// Conversations abandonnées — balayage toutes les heures (à la minute 5).
+// Clôt les fils `open` sans activité depuis 24h et crée un lead partiel si le
+// client avait commencé à répondre, pour ne pas perdre le contact.
+cron.schedule(
+  "5 * * * *",
+  async () => {
+    try {
+      await sweepAbandonedConversations();
+    } catch (err) {
+      Sentry.captureException(err);
+    }
+  },
+  { timezone: "Europe/Brussels" }
+);
+
+// File des SMS entrants — drainée toutes les 5 s. Le webhook Twilio acquitte
 // immédiatement et met en file ; la qualification LLM (lente) s'exécute ici,
 // hors du chemin de la requête HTTP. Garde anti-chevauchement : un tick lent
 // (LLM) ne doit pas se superposer au suivant.

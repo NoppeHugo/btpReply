@@ -7,7 +7,7 @@ const ACTIVE_STATES = ["open", "qualified"] as const;
 /**
  * Pool de numéros expéditeurs. Source : table SenderNumber (numéros actifs,
  * dans l'ordre de création). Repli sur l'env si la table est vide :
- * SMSTOOLS_SENDERS (séparés par des virgules) ou, à défaut, SMSTOOLS_SENDER.
+ * TWILIO_SENDERS (séparés par des virgules) ou, à défaut, TWILIO_SENDER.
  */
 export async function getSenderPool(): Promise<string[]> {
   const rows = await db.senderNumber.findMany({
@@ -17,7 +17,7 @@ export async function getSenderPool(): Promise<string[]> {
   });
   if (rows.length > 0) return rows.map((r) => r.number);
 
-  const env = process.env.SMSTOOLS_SENDERS || process.env.SMSTOOLS_SENDER || "";
+  const env = process.env.TWILIO_SENDERS || process.env.TWILIO_SENDER || "";
   return env
     .split(",")
     .map((s) => s.trim())
@@ -42,7 +42,7 @@ export async function assignSenderNumber(callerNumber: string): Promise<string> 
   const pool = await getSenderPool();
   if (pool.length === 0) {
     throw new Error(
-      "Aucun numéro expéditeur disponible (table SenderNumber vide et SMSTOOLS_SENDER(S) manquant)"
+      "Aucun numéro expéditeur disponible (table SenderNumber vide et TWILIO_SENDER(S) manquant)"
     );
   }
   // Un seul numéro : rien à arbitrer (comportement historique, pas de requête).

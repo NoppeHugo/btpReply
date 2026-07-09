@@ -1,11 +1,11 @@
-import { smstoolsSend } from "@/lib/smstools/client";
+import { twilioSmsSend } from "@/lib/twilio/sms";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { enforceSingleSegment, computeSegments } from "./segments";
 
 interface SendSmsParams {
   to: string;
-  // Expéditeur. Optionnel : par défaut le numéro smstools partagé (SMSTOOLS_SENDER).
+  // Expéditeur. Optionnel : par défaut le numéro Twilio partagé (TWILIO_SENDER).
   from?: string;
   body: string;
 }
@@ -20,12 +20,12 @@ export async function sendSms(params: SendSmsParams): Promise<string> {
     );
   }
 
-  const sender = params.from || process.env.SMSTOOLS_SENDER;
+  const sender = params.from || process.env.TWILIO_SENDER;
   if (!sender) {
-    throw new Error("SMSTOOLS_SENDER manquant (expéditeur SMS)");
+    throw new Error("TWILIO_SENDER manquant (expéditeur SMS)");
   }
 
-  const id = await smstoolsSend({ to: params.to, sender, message: body });
+  const id = await twilioSmsSend({ to: params.to, from: sender, message: body });
   logger.info({ id, to: params.to }, "SMS envoyé");
   return id;
 }

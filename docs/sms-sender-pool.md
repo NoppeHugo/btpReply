@@ -7,13 +7,14 @@
 > Assignation à la création du fil et routage entrant : `src/lib/conversations/service.ts`
 > (`getOrCreateConversation`, `findOpenConversationForInbound`). Schéma : modèle
 > `SenderNumber` + `Conversation.senderNumber` / `Conversation.lastMessageAt`.
-> Config : `SMSTOOLS_SENDERS` (pool) et `SENDER_COOLDOWN_DAYS` (défaut 7).
+> Config : `TWILIO_SENDERS` (pool) et `SENDER_COOLDOWN_DAYS` (défaut 7).
+> Fournisseur SMS : **Twilio** (voir [sms-provider-decision.md](./sms-provider-decision.md)).
 
 ## Contexte / problème
 
-Aujourd'hui l'app utilise **un seul numéro partagé** (`SMSTOOLS_SENDER`) pour tous
-les clients. Le routage des SMS entrants se fait **par le numéro de l'appelant**
-(`findOpenConversationByCaller` → `smstools/inbound/route.ts`), car au moment où
+Sans pool, l'app utilise **un seul numéro partagé** (`TWILIO_SENDER`) pour tous
+les clients. Le routage des SMS entrants se ferait **par le numéro de l'appelant**
+(`findOpenConversationByCaller` → `twilio/sms/route.ts`), car au moment où
 un SMS arrive on ne sait pas *à qui* il répond : tous les clients partagent le
 même expéditeur.
 
@@ -140,19 +141,20 @@ rattaché à un client ».
    et l'utiliser comme `sender`.
 3. **Cooldown** : `lastMessageAt` mis à jour à chaque message entrant/sortant.
    Durée N configurable (env, ex. `SENDER_COOLDOWN_DAYS=7`).
-4. **Routage entrant** : dans `smstools/inbound`, router par
-   `(senderNumber = message.receiver, callerNumber = message.sender)` au lieu de
-   `sender` seul. Le webhook lit déjà `message.receiver`.
+4. **Routage entrant** : dans `twilio/sms`, router par
+   `(senderNumber = To, callerNumber = From)` au lieu de `From` seul. Le webhook
+   Twilio fournit `To` (notre numéro destinataire).
 5. **Tests** : attribution (numéro libre choisi ; réutilisation du même numéro
    pour une conversation existante ; numéro repris après expiration du cooldown ;
    2ᵉ numéro pris si chevauchement dans la fenêtre), routage entrant sans
    ambiguïté.
 
-## Pré-requis côté smstools (à vérifier)
+## Pré-requis côté Twilio
 
-- Pouvoir **louer plusieurs numéros virtuels**.
-- Recevoir le champ `receiver` dans le webhook entrant `inbox_message`
-  (déjà lu dans le payload actuel — OK).
+- **Louer plusieurs numéros** SMS-enabled (~1,15 €/mois pièce — voir
+  [sms-provider-decision.md](./sms-provider-decision.md)).
+- Le champ `To` du webhook entrant Twilio donne notre numéro destinataire
+  (clé de routage) — disponible nativement.
 
 ## Alternatives écartées
 
