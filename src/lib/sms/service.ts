@@ -5,7 +5,8 @@ import { enforceSingleSegment, computeSegments } from "./segments";
 
 interface SendSmsParams {
   to: string;
-  // Expéditeur. Optionnel : par défaut le numéro Twilio partagé (TWILIO_SENDER).
+  // Expéditeur = numéro Twilio du client (celui qui a reçu l'appel). Requis :
+  // chaque client émet depuis son propre numéro, il n'y a pas d'expéditeur global.
   from?: string;
   body: string;
 }
@@ -20,12 +21,11 @@ export async function sendSms(params: SendSmsParams): Promise<string> {
     );
   }
 
-  const sender = params.from || process.env.TWILIO_SENDER;
-  if (!sender) {
-    throw new Error("TWILIO_SENDER manquant (expéditeur SMS)");
+  if (!params.from) {
+    throw new Error("Numéro expéditeur (from) manquant pour l'envoi SMS");
   }
 
-  const id = await twilioSmsSend({ to: params.to, from: sender, message: body });
+  const id = await twilioSmsSend({ to: params.to, from: params.from, message: body });
   logger.info({ id, to: params.to }, "SMS envoyé");
   return id;
 }

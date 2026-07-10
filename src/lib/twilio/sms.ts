@@ -6,7 +6,7 @@ import { logger } from "@/lib/logger";
 
 export interface TwilioSmsSendParams {
   to: string; // numéro destinataire (format E.164, ex. +324...)
-  from: string; // numéro/expéditeur Twilio (TWILIO_SENDER / pool)
+  from: string; // numéro Twilio du client (celui qui a reçu l'appel)
   message: string; // corps du SMS (déjà assaini en 1 segment en amont)
 }
 

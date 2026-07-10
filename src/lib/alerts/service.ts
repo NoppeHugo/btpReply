@@ -58,6 +58,12 @@ export async function sendLeadAlert(
     select: {
       alertEmail: true,
       alertPhone: true,
+      // Numéro Twilio du client : expéditeur du SMS d'alerte (pas d'expéditeur global).
+      phoneNumbers: {
+        where: { active: true },
+        select: { number: true },
+        take: 1,
+      },
     },
   });
 
@@ -91,16 +97,24 @@ export async function sendLeadAlert(
 
   // ── Alerte SMS optionnelle (si un numéro d'alerte est configuré) ─────────
   if (client?.alertPhone) {
-    const urgencyLabel = params.urgency ? ` [${params.urgency}]` : "";
-    const smsBody = `Nouveau lead${urgencyLabel} : ${params.type ?? "demande"} — ${params.callerNumber}. ${params.summary}`.slice(
-      0,
-      300
-    );
-    try {
-      await sendSms({ to: client.alertPhone, body: smsBody });
-      logger.info({ clientId }, "Alerte lead envoyée (SMS)");
-    } catch (err) {
-      logger.error({ err, clientId }, "Échec alerte SMS");
+    const from = client.phoneNumbers[0]?.number;
+    if (!from) {
+      logger.warn(
+        { clientId },
+        "sendLeadAlert: aucun numéro Twilio actif pour ce client — SMS d'alerte non envoyé"
+      );
+    } else {
+      const urgencyLabel = params.urgency ? ` [${params.urgency}]` : "";
+      const smsBody = `Nouveau lead${urgencyLabel} : ${params.type ?? "demande"} — ${params.callerNumber}. ${params.summary}`.slice(
+        0,
+        300
+      );
+      try {
+        await sendSms({ to: client.alertPhone, from, body: smsBody });
+        logger.info({ clientId }, "Alerte lead envoyée (SMS)");
+      } catch (err) {
+        logger.error({ err, clientId }, "Échec alerte SMS");
+      }
     }
   }
 }

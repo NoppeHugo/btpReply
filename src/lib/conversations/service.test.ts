@@ -9,7 +9,7 @@ vi.mock("@/lib/db", () => ({
       findMany: vi.fn(),
       update: vi.fn(),
     },
-    senderNumber: { findMany: vi.fn() },
+    call: { findUnique: vi.fn() },
     message: { create: vi.fn() },
   },
 }));
@@ -17,9 +17,6 @@ vi.mock("@/lib/db", () => ({
 vi.mock("@/lib/logger", () => ({
   logger: { info: vi.fn(), warn: vi.fn() },
 }));
-
-// Pool à un seul numéro : assignSenderNumber renvoie ce numéro sans arbitrage.
-process.env.TWILIO_SENDER = "+320000";
 
 import {
   getOrCreateConversation,
@@ -37,14 +34,14 @@ const mockDb = db as unknown as {
     findMany: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
   };
-  senderNumber: { findMany: ReturnType<typeof vi.fn> };
+  call: { findUnique: ReturnType<typeof vi.fn> };
   message: { create: ReturnType<typeof vi.fn> };
 };
 
 beforeEach(() => {
   vi.clearAllMocks();
-  // Table SenderNumber vide → pool lu depuis l'env (TWILIO_SENDER).
-  mockDb.senderNumber.findMany.mockResolvedValue([]);
+  // senderNumber = numéro Twilio du client (celui qui a reçu l'appel).
+  mockDb.call.findUnique.mockResolvedValue({ phoneNumber: { number: "+320000" } });
 });
 
 describe("getOrCreateConversation", () => {

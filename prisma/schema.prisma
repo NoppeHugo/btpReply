@@ -175,15 +175,16 @@ model Conversation {
   clientId     String
   callId       String            @unique
   callerNumber String
-  // Numéro expéditeur Twilio assigné à ce fil (pool de numéros « collants »).
-  // Sert de clé de routage des SMS entrants : (senderNumber = receiver, callerNumber).
+  // Numéro Twilio du client (celui qui a reçu l'appel) depuis lequel part ce fil.
+  // Clé de routage des SMS entrants : (senderNumber = receiver, callerNumber).
+  // Chaque client ayant son propre numéro, aucune collision possible.
   senderNumber String?
   state        ConversationState @default(open)
   turnCount    Int               @default(0)
   language     String            @default("fr")
   // false = l'artisan a repris la main : la qualification auto est en pause
   autopilot    Boolean           @default(true)
-  // Dernier message échangé : fenêtre de cooldown pour libérer le senderNumber.
+  // Dernier message échangé — sert à détecter les conversations abandonnées (stale).
   lastMessageAt DateTime?
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
@@ -197,24 +198,6 @@ model Conversation {
   @@index([callerNumber])
   @@index([callerNumber, senderNumber])
   @@map("conversations")
-}
-
-// ---------------------------------------------------------------------------
-// SenderNumber (pool de numéros expéditeurs Twilio partagés)
-// ---------------------------------------------------------------------------
-// Le routage des SMS entrants se fait par (senderNumber = receiver, appelant).
-// Un numéro est réservé à un appelant tant qu'une conversation reste active dans
-// la fenêtre de cooldown, ce qui élimine les collisions de routage. Table
-// optionnelle : si vide, le pool est lu depuis l'env (TWILIO_SENDERS / TWILIO_SENDER).
-
-model SenderNumber {
-  id        String   @id @default(cuid())
-  number    String   @unique
-  label     String?
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now())
-
-  @@map("sender_numbers")
 }
 
 // ---------------------------------------------------------------------------

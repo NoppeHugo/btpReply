@@ -2,7 +2,6 @@ import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { ConversationState, MessageDirection } from "@/generated/prisma/client";
 import type { ConversationMessage } from "@/lib/llm/qualification";
-import { assignSenderNumber } from "@/lib/sms/sender-pool";
 
 interface GetOrCreateConversationParams {
   clientId: string;
@@ -11,9 +10,10 @@ interface GetOrCreateConversationParams {
 }
 
 /**
- * Retourne la conversation du callId (créée si besoin) + son numéro expéditeur
- * assigné (pool de numéros « collants »). Le senderNumber est fixé à la création
- * et sert de clé de routage des SMS entrants.
+ * Retourne la conversation du callId (créée si besoin) + son numéro expéditeur.
+ * Le senderNumber est le numéro Twilio du client qui a reçu l'appel : les SMS de
+ * ce fil partent de lui et les réponses y reviennent (clé de routage entrant).
+ * Chaque client ayant son propre numéro, il n'y a aucune collision possible.
  */
 export async function getOrCreateConversation(
   params: GetOrCreateConversationParams
@@ -24,14 +24,14 @@ export async function getOrCreateConversation(
   });
 
   if (existing) {
-    // Rattrapage : anciennes conversations sans numéro expéditeur assigné.
+    // Rattrapage : anciennes conversations sans numéro expéditeur stocké.
     const senderNumber =
       existing.senderNumber ??
-      (await assignAndStoreSender(existing.id, params.callerNumber));
+      (await backfillSenderNumber(existing.id, params.callId));
     return { id: existing.id, senderNumber };
   }
 
-  const senderNumber = await assignSenderNumber(params.callerNumber);
+  const senderNumber = await resolveClientNumber(params.callId);
   const conv = await db.conversation.create({
     data: {
       clientId: params.clientId,
@@ -49,11 +49,24 @@ export async function getOrCreateConversation(
   return { id: conv.id, senderNumber };
 }
 
-async function assignAndStoreSender(
+/** Numéro Twilio du client qui a reçu l'appel (expéditeur des SMS de ce fil). */
+async function resolveClientNumber(callId: string): Promise<string> {
+  const call = await db.call.findUnique({
+    where: { id: callId },
+    select: { phoneNumber: { select: { number: true } } },
+  });
+  const number = call?.phoneNumber?.number;
+  if (!number) {
+    throw new Error(`Numéro du client introuvable pour l'appel ${callId}`);
+  }
+  return number;
+}
+
+async function backfillSenderNumber(
   conversationId: string,
-  callerNumber: string
+  callId: string
 ): Promise<string> {
-  const senderNumber = await assignSenderNumber(callerNumber);
+  const senderNumber = await resolveClientNumber(callId);
   await db.conversation.update({
     where: { id: conversationId },
     data: { senderNumber },

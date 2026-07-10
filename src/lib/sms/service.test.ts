@@ -11,12 +11,11 @@ const mockSend = twilioSmsSend as unknown as ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   vi.clearAllMocks();
-  delete process.env.TWILIO_SENDER;
   mockSend.mockResolvedValue("SM123");
 });
 
 describe("sendSms", () => {
-  it("délègue à twilioSmsSend avec l'expéditeur fourni et retourne le sid", async () => {
+  it("délègue à twilioSmsSend avec l'expéditeur du client et retourne le sid", async () => {
     const id = await sendSms({ to: "+32477000001", from: "+320001", body: "Bonjour" });
 
     expect(id).toBe("SM123");
@@ -27,20 +26,8 @@ describe("sendSms", () => {
     });
   });
 
-  it("retombe sur TWILIO_SENDER quand aucun expéditeur n'est fourni", async () => {
-    process.env.TWILIO_SENDER = "+320000";
-
-    await sendSms({ to: "+32477000001", body: "Salut" });
-
-    expect(mockSend).toHaveBeenCalledWith(
-      expect.objectContaining({ from: "+320000" })
-    );
-  });
-
-  it("lève si aucun expéditeur (paramètre ni TWILIO_SENDER)", async () => {
-    await expect(sendSms({ to: "+32477000001", body: "x" })).rejects.toThrow(
-      /TWILIO_SENDER/
-    );
+  it("lève si aucun expéditeur (from) n'est fourni — il n'y a plus d'expéditeur global", async () => {
+    await expect(sendSms({ to: "+32477000001", body: "x" })).rejects.toThrow(/from/);
     expect(mockSend).not.toHaveBeenCalled();
   });
 });

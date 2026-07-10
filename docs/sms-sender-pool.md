@@ -1,5 +1,13 @@
 # SMS — Pool de numéros « collants » (sticky sender)
 
+> ⚠️ **REMPLACÉ (juillet 2026).** Ce pool ne servait qu'à contourner le **numéro
+> partagé** de smstools. Depuis le retour sur Twilio, chaque SMS repart du **numéro
+> Twilio propre du client** (celui qui a reçu l'appel) : chaque client a un numéro
+> distinct → **aucune collision possible**, sans pool ni cooldown. Le modèle
+> `SenderNumber`, `assignSenderNumber` et les variables `TWILIO_SENDER(S)` /
+> `SENDER_COOLDOWN_DAYS` ont été supprimés. `Conversation.senderNumber` est
+> désormais simplement le numéro du client. Doc conservée pour l'historique.
+
 > **But** : éliminer *déterministe­ment* la collision de routage des SMS entrants,
 > sans passer à un numéro dédié par client.
 >
