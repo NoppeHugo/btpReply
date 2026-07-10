@@ -136,6 +136,15 @@
   }
   html {
     @apply font-sans;
+    /* Look app native : pas de flash bleu au tap, pas de double-tap zoom. */
+    -webkit-tap-highlight-color: transparent;
+  }
+  a,
+  button,
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
   }
 }
 
@@ -162,9 +171,9 @@
   .app-muted {
     @apply text-white/50;
   }
-  /* Champs */
+  /* Champs — text-base sur mobile : sous 16 px, iOS zoome au focus. */
   .app-input {
-    @apply rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-amber-500/50 focus:outline-none focus:ring-1 focus:ring-amber-500/40;
+    @apply rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-base text-white placeholder:text-white/30 focus:border-amber-500/50 focus:outline-none focus:ring-1 focus:ring-amber-500/40 sm:text-sm;
   }
   .app-label {
     @apply mb-1 block text-sm font-medium text-white/70;

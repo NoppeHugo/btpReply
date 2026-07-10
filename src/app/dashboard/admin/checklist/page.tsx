@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { checkEnv } from "@/lib/env";
+import { Check, X, Square } from "lucide-react";
 
 async function checkDb(): Promise<{ ok: boolean; latencyMs: number }> {
   try {
@@ -44,7 +45,7 @@ function Badge({ ok, label }: { ok: boolean; label: string }) {
           : "bg-red-500/15 text-red-400"
       }`}
     >
-      {ok ? "✓" : "✗"} {label}
+      {ok ? <Check className="size-3" /> : <X className="size-3" />} {label}
     </span>
   );
 }
@@ -163,7 +164,7 @@ export default async function ChecklistPage() {
             "Seed admin prod : `pnpm db:seed` avec SEED_ADMIN_PASSWORD fort",
           ].map((item, i) => (
             <li key={i} className="flex gap-2">
-              <span className="mt-0.5 text-white/30">☐</span>
+              <Square className="mt-0.5 size-4 shrink-0 text-white/30" strokeWidth={1.5} />
               <span>{item}</span>
             </li>
           ))}

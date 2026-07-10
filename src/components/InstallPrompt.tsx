@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { X } from "lucide-react";
 
 // Invite à installer la PWA.
 //  - Android/Chrome : capte beforeinstallprompt → bouton « Installer ».
@@ -81,10 +82,10 @@ export function InstallPrompt() {
         <button
           type="button"
           onClick={() => setClosed(true)}
-          className="text-white/40 hover:text-white/70"
+          className="rounded-md p-1 text-white/40 hover:text-white/70"
           aria-label="Fermer"
         >
-          ✕
+          <X className="size-4" />
         </button>
       </div>
       {deferred && (

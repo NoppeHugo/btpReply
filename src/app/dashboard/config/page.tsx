@@ -1,7 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { Check, Trash2, Plus } from "lucide-react";
 import { ContactImport } from "@/components/ContactImport";
+
+/** L'API enveloppe ses réponses dans { ok, data } : désenveloppe le JSON. */
+function unwrap<T>(json: unknown): T {
+  const j = json as { data?: T } | null;
+  return (j?.data ?? json) as T;
+}
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -69,7 +76,8 @@ function BusinessHoursSection() {
   useEffect(() => {
     fetch("/api/v1/config/business-hours")
       .then((r) => r.json())
-      .then((data: HoursEntry[]) => {
+      .then((json) => {
+        const data = unwrap<HoursEntry[]>(json);
         if (Array.isArray(data) && data.length > 0) {
           const merged = DAYS.map((d) => {
             const found = data.find((e) => e.dayOfWeek === d.key);
@@ -150,7 +158,15 @@ function BusinessHoursSection() {
         disabled={saving}
         className="btn-primary mt-4"
       >
-        {saved ? "Sauvegardé ✓" : saving ? "Sauvegarde…" : "Sauvegarder"}
+        {saved ? (
+          <>
+            <Check className="size-4" /> Sauvegardé
+          </>
+        ) : saving ? (
+          "Sauvegarde…"
+        ) : (
+          "Sauvegarder"
+        )}
       </button>
     </section>
   );
@@ -167,7 +183,10 @@ function WhitelistSection() {
   const load = useCallback(() => {
     fetch("/api/v1/config/whitelist")
       .then((r) => r.json())
-      .then((data: WhitelistEntry[]) => setEntries(data))
+      .then((json) => {
+        const data = unwrap<WhitelistEntry[]>(json);
+        setEntries(Array.isArray(data) ? data : []);
+      })
       .catch(() => {});
   }, []);
 
@@ -224,7 +243,7 @@ function WhitelistSection() {
           disabled={adding || !number.trim()}
           className="btn-primary"
         >
-          Ajouter
+          <Plus className="size-4" /> Ajouter
         </button>
       </div>
 
@@ -252,9 +271,10 @@ function WhitelistSection() {
               {e.label !== "opted_out" && (
                 <button
                   onClick={() => remove(e.id)}
-                  className="ml-auto text-xs text-red-400 hover:text-red-300"
+                  className="ml-auto flex items-center gap-1 rounded-md p-1.5 text-xs text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                  aria-label="Supprimer"
                 >
-                  Supprimer
+                  <Trash2 className="size-3.5" />
                 </button>
               )}
             </li>
@@ -275,7 +295,9 @@ function TemplatesSection() {
   useEffect(() => {
     fetch("/api/v1/config/templates")
       .then((r) => r.json())
-      .then((data: Template[]) => {
+      .then((json) => {
+        const data = unwrap<Template[]>(json);
+        if (!Array.isArray(data)) return;
         const map: Record<string, Record<string, string>> = {};
         for (const t of data) {
           if (!map[t.key]) map[t.key] = {};
@@ -352,7 +374,15 @@ function TemplatesSection() {
         disabled={saving}
         className="btn-primary mt-4"
       >
-        {saved ? "Sauvegardé ✓" : saving ? "Sauvegarde…" : "Sauvegarder"}
+        {saved ? (
+          <>
+            <Check className="size-4" /> Sauvegardé
+          </>
+        ) : saving ? (
+          "Sauvegarde…"
+        ) : (
+          "Sauvegarder"
+        )}
       </button>
     </section>
   );
@@ -494,7 +524,15 @@ function SettingsSection() {
         disabled={saving}
         className="btn-primary mt-4"
       >
-        {saved ? "Sauvegardé ✓" : saving ? "Sauvegarde…" : "Sauvegarder"}
+        {saved ? (
+          <>
+            <Check className="size-4" /> Sauvegardé
+          </>
+        ) : saving ? (
+          "Sauvegarde…"
+        ) : (
+          "Sauvegarder"
+        )}
       </button>
     </section>
   );

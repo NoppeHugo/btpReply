@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { redirect, notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import Link from "next/link";
+import { ArrowLeft, Phone, MapPin, Clock } from "lucide-react";
 import { ConversationReply } from "./ConversationReply";
 
 const STATE_LABEL: Record<string, string> = {
@@ -70,9 +71,10 @@ export default async function ConversationPage({
       {/* Back */}
       <Link
         href="/dashboard/calls"
-        className="mb-4 inline-flex items-center gap-1 text-sm text-white/50 hover:text-white"
+        className="mb-4 inline-flex items-center gap-1.5 text-sm text-white/50 hover:text-white"
       >
-        ← Retour aux appels
+        <ArrowLeft className="size-4" />
+        Retour aux appels
       </Link>
 
       {/* Header */}
@@ -97,9 +99,10 @@ export default async function ConversationPage({
           <div className="flex items-center gap-2">
             <a
               href={`tel:${conversation.callerNumber}`}
-              className="inline-flex items-center gap-1.5 rounded-md bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700"
+              className="inline-flex items-center gap-1.5 rounded-full bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700"
             >
-              📞 Appeler
+              <Phone className="size-3.5" />
+              Appeler
             </a>
             <span className="pill">
               {STATE_LABEL[conversation.state] ?? conversation.state}
@@ -132,11 +135,15 @@ export default async function ConversationPage({
               <p className="mt-2 text-sm text-white/80">{lead.summary}</p>
             )}
             {lead.location && (
-              <p className="mt-1 text-xs text-white/50">📍 {lead.location}</p>
+              <p className="mt-1 flex items-center gap-1 text-xs text-white/50">
+                <MapPin className="size-3 shrink-0" />
+                {lead.location}
+              </p>
             )}
             {lead.availability && (
-              <p className="mt-0.5 text-xs text-white/50">
-                🕐 {lead.availability}
+              <p className="mt-0.5 flex items-center gap-1 text-xs text-white/50">
+                <Clock className="size-3 shrink-0" />
+                {lead.availability}
               </p>
             )}
           </div>

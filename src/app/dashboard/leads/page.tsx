@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect, useTransition, useCallback } from "react";
+import { MapPin, Clock } from "lucide-react";
 
 type Lead = {
   id: string;
@@ -42,13 +43,21 @@ export default function LeadsPage() {
   const [data, setData] = useState<LeadData | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  useEffect(() => {
+  // L'API enveloppe ses réponses dans { ok, data } : on désenveloppe ici.
+  const load = useCallback(() => {
     startTransition(async () => {
       const qs = filter ? `?status=${filter}` : "";
       const res = await fetch(`/api/v1/leads${qs}`);
-      if (res.ok) setData(await res.json());
+      if (res.ok) {
+        const json = await res.json();
+        setData((json?.data ?? json) as LeadData);
+      }
     });
   }, [filter]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   async function updateStatus(id: string, status: string) {
     await fetch(`/api/v1/leads/${id}`, {
@@ -56,11 +65,7 @@ export default function LeadsPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
     });
-    startTransition(async () => {
-      const qs = filter ? `?status=${filter}` : "";
-      const res = await fetch(`/api/v1/leads${qs}`);
-      if (res.ok) setData(await res.json());
-    });
+    load();
   }
 
   return (
@@ -125,13 +130,15 @@ export default function LeadsPage() {
                     <p className="text-sm text-white/80">{lead.summary}</p>
                   )}
                   {lead.location && (
-                    <p className="mt-1 text-xs text-white/50">
-                      📍 {lead.location}
+                    <p className="mt-1 flex items-center gap-1 text-xs text-white/50">
+                      <MapPin className="size-3 shrink-0" />
+                      {lead.location}
                     </p>
                   )}
                   {lead.availability && (
-                    <p className="mt-0.5 text-xs text-white/50">
-                      🕐 {lead.availability}
+                    <p className="mt-0.5 flex items-center gap-1 text-xs text-white/50">
+                      <Clock className="size-3 shrink-0" />
+                      {lead.availability}
                     </p>
                   )}
                   <p className="mt-1 text-xs text-white/30">

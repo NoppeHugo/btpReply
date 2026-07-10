@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import Link from "next/link";
+import { Phone, ClipboardList, Users, Plus } from "lucide-react";
 
 const STAGE_BADGE: Record<string, string> = {
   prospect: "bg-amber-500/15 text-amber-300",
@@ -34,7 +35,7 @@ export default async function ClientsPage() {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h1 className="app-h1">Clients ({clients.length})</h1>
         <Link href="/dashboard/clients/new" className="btn-primary">
-          + Nouveau client
+          <Plus className="size-4" /> Nouveau client
         </Link>
       </div>
 
@@ -68,9 +69,15 @@ export default async function ClientsPage() {
                 </span>
               </div>
               <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/60">
-                <span>📞 {c._count.calls} appels</span>
-                <span>✅ {c._count.leads} leads</span>
-                <span>👥 {c._count.users} users</span>
+                <span className="flex items-center gap-1">
+                  <Phone className="size-3" /> {c._count.calls} appels
+                </span>
+                <span className="flex items-center gap-1">
+                  <ClipboardList className="size-3" /> {c._count.leads} leads
+                </span>
+                <span className="flex items-center gap-1">
+                  <Users className="size-3" /> {c._count.users} users
+                </span>
                 <span className="text-white/30">
                   {new Date(c.createdAt).toLocaleDateString("fr-BE")}
                 </span>

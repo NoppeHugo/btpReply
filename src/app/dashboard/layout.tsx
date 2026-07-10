@@ -1,8 +1,8 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { PhoneMissed } from "lucide-react";
+import { PhoneMissed, LogOut } from "lucide-react";
 import { signOut } from "@/auth";
-import { SidebarNav, MobileTabBar, type NavItem } from "./nav";
+import { SidebarNav, MobileTabBar } from "./nav";
 
 export default async function DashboardLayout({
   children,
@@ -13,21 +13,6 @@ export default async function DashboardLayout({
   if (!session) redirect("/login");
 
   const isAdmin = session.user.role === "admin";
-
-  const items: NavItem[] = [
-    ...(isAdmin
-      ? [
-          { href: "/dashboard/clients", label: "Clients", icon: "👥" },
-          { href: "/dashboard/admin/checklist", label: "Go-live", icon: "🚀" },
-        ]
-      : []),
-    { href: "/dashboard/calls", label: "Appels", icon: "📞" },
-    { href: "/dashboard/leads", label: "Leads", icon: "✅" },
-    { href: "/dashboard/roi", label: "ROI", icon: "📊" },
-    ...(!isAdmin
-      ? [{ href: "/dashboard/config", label: "Config", icon: "⚙️" }]
-      : []),
-  ];
 
   const signOutAction = async () => {
     "use server";
@@ -53,7 +38,7 @@ export default async function DashboardLayout({
           {Logo}
         </div>
 
-        <SidebarNav items={items} />
+        <SidebarNav isAdmin={isAdmin} />
 
         <div className="mt-auto border-t border-white/10 p-3">
           <p className="mb-2 truncate text-xs text-white/40">
@@ -62,8 +47,9 @@ export default async function DashboardLayout({
           <form action={signOutAction}>
             <button
               type="submit"
-              className="w-full rounded-lg px-3 py-1.5 text-left text-sm text-white/60 transition-colors hover:bg-white/5 hover:text-white"
+              className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-sm text-white/60 transition-colors hover:bg-white/5 hover:text-white"
             >
+              <LogOut className="size-4" strokeWidth={1.75} />
               Déconnexion
             </button>
           </form>
@@ -71,25 +57,27 @@ export default async function DashboardLayout({
       </aside>
 
       {/* Top header (mobile) */}
-      <header className="flex h-14 items-center justify-between border-b border-white/10 bg-neutral-950 px-4 lg:hidden">
+      <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-white/10 bg-neutral-950/95 px-4 pt-[env(safe-area-inset-top)] backdrop-blur lg:hidden">
         {Logo}
         <form action={signOutAction}>
           <button
             type="submit"
-            className="rounded-lg px-3 py-1.5 text-sm text-white/60 transition-colors hover:bg-white/5 hover:text-white"
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-white/60 transition-colors hover:bg-white/5 hover:text-white"
+            aria-label="Déconnexion"
           >
-            Déconnexion
+            <LogOut className="size-4" strokeWidth={1.75} />
+            <span className="sr-only sm:not-sr-only">Déconnexion</span>
           </button>
         </form>
       </header>
 
       {/* Main */}
-      <main className="flex-1 overflow-auto p-4 pb-24 lg:p-6 lg:pb-6">
+      <main className="flex-1 overflow-auto p-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:p-6 lg:pb-6">
         {children}
       </main>
 
       {/* Bottom tab bar (mobile) */}
-      <MobileTabBar items={items} />
+      <MobileTabBar isAdmin={isAdmin} />
     </div>
   );
 }
