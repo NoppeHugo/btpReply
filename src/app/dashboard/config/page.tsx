@@ -3,30 +3,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { Check, Trash2, Plus } from "lucide-react";
 import { ContactImport } from "@/components/ContactImport";
-
-/** L'API enveloppe ses réponses dans { ok, data } : désenveloppe le JSON. */
-function unwrap<T>(json: unknown): T {
-  const j = json as { data?: T } | null;
-  return (j?.data ?? json) as T;
-}
+import { BusinessHoursSection } from "@/components/config/BusinessHoursSection";
+import { SettingsSection } from "@/components/config/SettingsSection";
+import { EnablePushButton } from "@/components/EnablePushButton";
+import { unwrap } from "@/lib/api/unwrap";
 
 // ── Types ────────────────────────────────────────────────────────────────────
-
-type DayOfWeek =
-  | "monday"
-  | "tuesday"
-  | "wednesday"
-  | "thursday"
-  | "friday"
-  | "saturday"
-  | "sunday";
-
-type HoursEntry = {
-  dayOfWeek: DayOfWeek;
-  openTime: string;
-  closeTime: string;
-  closed: boolean;
-};
 
 type WhitelistEntry = {
   id: string;
@@ -44,133 +26,10 @@ type Template = {
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-const DAYS: { key: DayOfWeek; label: string }[] = [
-  { key: "monday", label: "Lundi" },
-  { key: "tuesday", label: "Mardi" },
-  { key: "wednesday", label: "Mercredi" },
-  { key: "thursday", label: "Jeudi" },
-  { key: "friday", label: "Vendredi" },
-  { key: "saturday", label: "Samedi" },
-  { key: "sunday", label: "Dimanche" },
-];
-
-const DEFAULT_HOURS: HoursEntry[] = DAYS.map((d) => ({
-  dayOfWeek: d.key,
-  openTime: "08:00",
-  closeTime: "18:00",
-  closed: d.key === "saturday" || d.key === "sunday",
-}));
-
 const TEMPLATE_KEYS = [
   { key: "initial_sms", label: "SMS initial (après appel manqué)" },
   { key: "out_of_hours_sms", label: "SMS hors heures d'ouverture" },
 ];
-
-// ── Section: Business Hours ───────────────────────────────────────────────────
-
-function BusinessHoursSection() {
-  const [hours, setHours] = useState<HoursEntry[]>(DEFAULT_HOURS);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-
-  useEffect(() => {
-    fetch("/api/v1/config/business-hours")
-      .then((r) => r.json())
-      .then((json) => {
-        const data = unwrap<HoursEntry[]>(json);
-        if (Array.isArray(data) && data.length > 0) {
-          const merged = DAYS.map((d) => {
-            const found = data.find((e) => e.dayOfWeek === d.key);
-            return (
-              found ?? {
-                dayOfWeek: d.key,
-                openTime: "08:00",
-                closeTime: "18:00",
-                closed: false,
-              }
-            );
-          });
-          setHours(merged);
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  function updateDay(idx: number, patch: Partial<HoursEntry>) {
-    setHours((prev) => prev.map((h, i) => (i === idx ? { ...h, ...patch } : h)));
-  }
-
-  async function save() {
-    setSaving(true);
-    try {
-      await fetch("/api/v1/config/business-hours", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(hours),
-      });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <section className="app-card">
-      <h2 className="app-h2 mb-4">Heures d&apos;ouverture</h2>
-      <div className="space-y-2">
-        {hours.map((h, i) => (
-          <div key={h.dayOfWeek} className="flex flex-wrap items-center gap-3">
-            <span className="w-24 text-sm text-white/60">
-              {DAYS[i]?.label}
-            </span>
-            <label className="flex items-center gap-1.5 text-sm text-white/50">
-              <input
-                type="checkbox"
-                checked={h.closed}
-                onChange={(e) => updateDay(i, { closed: e.target.checked })}
-                className="rounded"
-              />
-              Fermé
-            </label>
-            {!h.closed && (
-              <>
-                <input
-                  type="time"
-                  value={h.openTime}
-                  onChange={(e) => updateDay(i, { openTime: e.target.value })}
-                  className="app-input"
-                />
-                <span className="text-sm text-white/40">–</span>
-                <input
-                  type="time"
-                  value={h.closeTime}
-                  onChange={(e) => updateDay(i, { closeTime: e.target.value })}
-                  className="app-input"
-                />
-              </>
-            )}
-          </div>
-        ))}
-      </div>
-      <button
-        onClick={save}
-        disabled={saving}
-        className="btn-primary mt-4"
-      >
-        {saved ? (
-          <>
-            <Check className="size-4" /> Sauvegardé
-          </>
-        ) : saving ? (
-          "Sauvegarde…"
-        ) : (
-          "Sauvegarder"
-        )}
-      </button>
-    </section>
-  );
-}
 
 // ── Section: Whitelist ────────────────────────────────────────────────────────
 
@@ -388,155 +247,22 @@ function TemplatesSection() {
   );
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+// ── Section: Notifications push ──────────────────────────────────────────────
 
-// ── Section: Paramètres (délai SMS + alertes) ─────────────────────────────────
-
-type Settings = {
-  initialSmsDelaySec: number;
-  alertEmail: string | null;
-  alertPhone: string | null;
-};
-
-function SettingsSection() {
-  const [settings, setSettings] = useState<Settings>({
-    initialSmsDelaySec: 30,
-    alertEmail: "",
-    alertPhone: "",
-  });
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetch("/api/v1/config/settings")
-      .then((r) => r.json())
-      .then((j) => {
-        const d = (j?.data ?? j) as Settings;
-        if (d && typeof d.initialSmsDelaySec === "number") {
-          setSettings({
-            initialSmsDelaySec: d.initialSmsDelaySec,
-            alertEmail: d.alertEmail ?? "",
-            alertPhone: d.alertPhone ?? "",
-          });
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  async function save() {
-    setSaving(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/v1/config/settings", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          initialSmsDelaySec: Number(settings.initialSmsDelaySec),
-          alertEmail: settings.alertEmail || "",
-          alertPhone: settings.alertPhone || "",
-        }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        throw new Error(data?.error ?? "Échec de la sauvegarde");
-      }
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Erreur");
-    } finally {
-      setSaving(false);
-    }
-  }
-
+function PushSection() {
   return (
     <section className="app-card">
-      <h2 className="app-h2 mb-1">Paramètres</h2>
+      <h2 className="app-h2 mb-1">Notifications</h2>
       <p className="mb-4 text-xs text-white/50">
-        Délai avant l&apos;envoi du premier SMS et coordonnées de réception des alertes.
+        Recevez une notification sur ce téléphone à chaque nouveau lead
+        (fonctionne quand l&apos;app est installée).
       </p>
-
-      <div className="space-y-4">
-        <div>
-          <label className="mb-1 block text-sm font-medium text-white/70">
-            Délai avant le premier SMS (secondes)
-          </label>
-          <input
-            type="number"
-            min={0}
-            max={600}
-            value={settings.initialSmsDelaySec}
-            onChange={(e) =>
-              setSettings((s) => ({
-                ...s,
-                initialSmsDelaySec: Number(e.target.value),
-              }))
-            }
-            className="app-input w-32"
-          />
-          <p className="mt-1 text-[11px] text-white/40">
-            Laisser le temps de décrocher soi-même avant l&apos;envoi (défaut : 30 s).
-          </p>
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium text-white/70">
-            Email de réception des alertes
-          </label>
-          <input
-            type="email"
-            placeholder="vous@exemple.be"
-            value={settings.alertEmail ?? ""}
-            onChange={(e) =>
-              setSettings((s) => ({ ...s, alertEmail: e.target.value }))
-            }
-            className="app-input w-full max-w-sm"
-          />
-          <p className="mt-1 text-[11px] text-white/40">
-            Vide = envoyé au(x) compte(s) propriétaire(s) du client.
-          </p>
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium text-white/70">
-            Numéro pour alerte SMS (optionnel)
-          </label>
-          <input
-            type="tel"
-            placeholder="+32470123456"
-            value={settings.alertPhone ?? ""}
-            onChange={(e) =>
-              setSettings((s) => ({ ...s, alertPhone: e.target.value }))
-            }
-            className="app-input w-full max-w-sm"
-          />
-          <p className="mt-1 text-[11px] text-white/40">
-            Si renseigné, un SMS d&apos;alerte est aussi envoyé à ce numéro pour chaque lead.
-          </p>
-        </div>
-      </div>
-
-      {error && <p className="mt-3 text-xs text-red-600">{error}</p>}
-
-      <button
-        onClick={save}
-        disabled={saving}
-        className="btn-primary mt-4"
-      >
-        {saved ? (
-          <>
-            <Check className="size-4" /> Sauvegardé
-          </>
-        ) : saving ? (
-          "Sauvegarde…"
-        ) : (
-          "Sauvegarder"
-        )}
-      </button>
+      <EnablePushButton />
     </section>
   );
 }
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function ConfigPage() {
   return (
@@ -544,6 +270,7 @@ export default function ConfigPage() {
       <h1 className="mb-6 app-h1">Configuration</h1>
       <div className="space-y-6">
         <SettingsSection />
+        <PushSection />
         <ContactImport />
         <BusinessHoursSection />
         <WhitelistSection />

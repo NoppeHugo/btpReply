@@ -4,6 +4,9 @@ import { db } from "@/lib/db";
 import { ok, HTTP } from "@/lib/api/response";
 import { getAuthedUser } from "@/lib/api/auth";
 import bcrypt from "bcryptjs";
+import { createResetToken, INVITE_TTL_MS } from "@/lib/auth/reset-token";
+import { sendEmail, FROM_EMAIL } from "@/lib/email/client";
+import { buildPasswordResetEmail } from "@/lib/email/templates";
 
 // GET /api/v1/clients — admin: tous ; owner: son seul client
 export async function GET(req: NextRequest) {
@@ -47,7 +50,9 @@ const createSchema = z.object({
   name: z.string().min(2).max(100),
   timezone: z.string().default("Europe/Brussels"),
   ownerEmail: z.string().email(),
-  ownerPassword: z.string().min(8),
+  // Optionnel : sans mot de passe, un lien d'invitation (7 jours) est retourné
+  // et l'artisan choisit son mot de passe lui-même.
+  ownerPassword: z.string().min(8).optional().or(z.literal("")),
   phoneNumber: z.string().regex(/^\+\d{8,15}$/, "Format E.164 requis (+32...)"),
 });
 
@@ -72,7 +77,7 @@ export async function POST(req: NextRequest) {
   if (existingUser) return HTTP.badRequest("Cet email est déjà utilisé");
   if (existingPhone) return HTTP.badRequest("Ce numéro est déjà enregistré");
 
-  const passwordHash = await bcrypt.hash(ownerPassword, 10);
+  const passwordHash = ownerPassword ? await bcrypt.hash(ownerPassword, 10) : null;
 
   const result = await db.$transaction(async (tx) => {
     const client = await tx.client.create({
@@ -98,5 +103,21 @@ export async function POST(req: NextRequest) {
     return { client, owner, phone };
   });
 
-  return ok(result, 201);
+  // Sans mot de passe : lien d'invitation (le token meurt dès que le mot de
+  // passe est défini). Envoyé par email si SMTP configuré, et retourné à
+  // l'admin pour transmission manuelle (WhatsApp, SMS…).
+  let inviteUrl: string | undefined;
+  if (!passwordHash) {
+    const token = createResetToken(result.owner.id, null, INVITE_TTL_MS);
+    const base = process.env.APP_BASE_URL ?? "http://localhost:3000";
+    inviteUrl = `${base}/reset-password?token=${encodeURIComponent(token)}&invite=1`;
+
+    const { subject, html } = buildPasswordResetEmail({
+      resetUrl: inviteUrl,
+      invite: true,
+    });
+    await sendEmail({ from: FROM_EMAIL, to: ownerEmail, subject, html });
+  }
+
+  return ok({ ...result, inviteUrl }, 201);
 }

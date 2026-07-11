@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { PhoneMissed, LogOut } from "lucide-react";
 import { signOut } from "@/auth";
+import { db } from "@/lib/db";
 import { SidebarNav, MobileTabBar } from "./nav";
 
 export default async function DashboardLayout({
@@ -13,6 +14,15 @@ export default async function DashboardLayout({
   if (!session) redirect("/login");
 
   const isAdmin = session.user.role === "admin";
+
+  // Premier login artisan : passer par le wizard d'onboarding.
+  if (!isAdmin) {
+    const client = await db.client.findUnique({
+      where: { id: session.user.clientId },
+      select: { onboardingCompletedAt: true },
+    });
+    if (client && !client.onboardingCompletedAt) redirect("/onboarding");
+  }
 
   const signOutAction = async () => {
     "use server";

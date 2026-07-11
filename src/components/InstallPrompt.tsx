@@ -15,7 +15,8 @@ interface BeforeInstallPromptEvent extends Event {
 
 // État navigateur externe lu via useSyncExternalStore (pas de setState en effet,
 // et snapshot serveur stable → pas de mismatch d'hydratation).
-function useStandalone(): boolean {
+// Exportés : réutilisés par le wizard d'onboarding.
+export function useStandalone(): boolean {
   return useSyncExternalStore(
     (cb) => {
       const mq = window.matchMedia("(display-mode: standalone)");
@@ -29,7 +30,7 @@ function useStandalone(): boolean {
   );
 }
 
-function useIsIOS(): boolean {
+export function useIsIOS(): boolean {
   return useSyncExternalStore(
     () => () => {},
     () => /iphone|ipad|ipod/i.test(navigator.userAgent),

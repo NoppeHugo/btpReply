@@ -6,6 +6,7 @@ import {
   type LeadAlertParams,
 } from "@/lib/email/templates";
 import { sendSms } from "@/lib/sms/service";
+import { sendPushToClient } from "@/lib/push/service";
 import { logger } from "@/lib/logger";
 
 /** Destinataires email d'un client : override `alertEmail`, sinon les owners. */
@@ -53,6 +54,13 @@ export async function sendLeadAlert(
   clientId: string,
   params: LeadAlertParams
 ): Promise<void> {
+  // ── Notification push (PWA) : instantanée, best-effort ───────────────────
+  sendPushToClient(clientId, {
+    title: params.urgency === "high" ? "🔴 Lead urgent" : "Nouveau lead",
+    body: `${params.type ?? "Demande"} — ${params.callerNumber}. ${params.summary}`.slice(0, 180),
+    url: "/dashboard/leads",
+  }).catch((err) => logger.error({ err, clientId }, "Échec push lead"));
+
   const client = await db.client.findUnique({
     where: { id: clientId },
     select: {

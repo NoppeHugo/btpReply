@@ -82,6 +82,15 @@ export default async function LoginPage({
           <button type="submit" className="btn-primary w-full">
             Se connecter
           </button>
+
+          <p className="text-center">
+            <a
+              href="/forgot-password"
+              className="text-xs text-white/40 transition-colors hover:text-white/70"
+            >
+              Mot de passe oublié ?
+            </a>
+          </p>
         </form>
       </div>
     </div>
