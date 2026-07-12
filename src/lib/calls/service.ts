@@ -57,9 +57,10 @@ export async function handleIncomingCall(
 }
 
 /**
- * P2-T2 / P5-T1 / P5-T3 : envoie le premier SMS après le délai configuré.
- * - Skip si le numéro est en liste blanche (P5-T1)
- * - SMS d'horaires si hors ouverture (P5-T3)
+ * P2-T2 : planifie le premier SMS après le délai configuré, via un job
+ * persisté en base drainé par le worker (survit aux redéploiements — un
+ * setTimeout en mémoire perdait le SMS si le process mourait pendant le délai).
+ * Idempotent : `callId` unique, un webhook rejoué ne crée pas de doublon.
  */
 export async function scheduleInitialSms(
   callId: string,
@@ -74,45 +75,70 @@ export async function scheduleInitialSms(
   const delaySec =
     client?.initialSmsDelaySec ??
     Number(process.env.INITIAL_SMS_DELAY_MS ?? 30_000) / 1000;
-  const delayMs = delaySec * 1000;
 
-  setTimeout(async () => {
-    try {
-      // P5-T1 : vérifier liste blanche avant tout envoi
-      if (await isNumberExcluded(clientId, callerNumber)) {
-        logger.info({ clientId, callerNumber }, "Numéro en liste blanche — SMS initial ignoré");
-        return;
-      }
-
-      // P5-T3 : choisir le gabarit selon les horaires
-      const open = await isWithinBusinessHours(clientId, new Date());
-      const body = open
-        ? await buildInitialSmsBody(clientId)
-        : await buildOutOfHoursSmsBody(clientId);
-
-      // Conversation créée d'abord : elle porte le numéro expéditeur assigné
-      // (pool de numéros « collants ») depuis lequel part ce premier SMS.
-      const { id: conversationId, senderNumber } = await getOrCreateConversation({
+  try {
+    await db.outboundSmsJob.create({
+      data: {
         clientId,
         callId,
         callerNumber,
-      });
-
-      const providerMessageId = await sendSms({
-        to: callerNumber,
-        from: senderNumber,
-        body,
-      });
-
-      await recordMessage({
-        clientId,
-        conversationId,
-        direction: MessageDirection.outbound,
-        body,
-        providerMessageId,
-      });
-    } catch (err) {
-      logger.error({ err, callId }, "Erreur lors de l'envoi du SMS initial");
+        sendAfter: new Date(Date.now() + delaySec * 1000),
+      },
+    });
+  } catch (err) {
+    const code = (err as { code?: string }).code;
+    if (code === "P2002") {
+      logger.info({ callId }, "SMS initial déjà planifié pour cet appel — ignoré");
+      return;
     }
-  }, delayMs);
+    throw err;
+  }
+}
+
+/**
+ * P5-T1 / P5-T3 : envoie le SMS initial maintenant (appelé par le worker
+ * quand le job est échu).
+ * - Skip si le numéro est en liste blanche (P5-T1)
+ * - SMS d'horaires si hors ouverture (P5-T3)
+ */
+export async function sendInitialSmsNow(
+  callId: string,
+  clientId: string,
+  callerNumber: string
+): Promise<"sent" | "skipped_whitelist"> {
+  // P5-T1 : vérifier liste blanche avant tout envoi
+  if (await isNumberExcluded(clientId, callerNumber)) {
+    logger.info({ clientId, callerNumber }, "Numéro en liste blanche — SMS initial ignoré");
+    return "skipped_whitelist";
+  }
+
+  // P5-T3 : choisir le gabarit selon les horaires
+  const open = await isWithinBusinessHours(clientId, new Date());
+  const body = open
+    ? await buildInitialSmsBody(clientId)
+    : await buildOutOfHoursSmsBody(clientId);
+
+  // Conversation créée d'abord : elle porte le numéro expéditeur assigné
+  // depuis lequel part ce premier SMS.
+  const { id: conversationId, senderNumber } = await getOrCreateConversation({
+    clientId,
+    callId,
+    callerNumber,
+  });
+
+  const providerMessageId = await sendSms({
+    to: callerNumber,
+    from: senderNumber,
+    body,
+  });
+
+  await recordMessage({
+    clientId,
+    conversationId,
+    direction: MessageDirection.outbound,
+    body,
+    providerMessageId,
+  });
+
+  return "sent";
 }

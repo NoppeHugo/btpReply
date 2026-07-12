@@ -119,6 +119,9 @@ model User {
   email        String   @unique
   role         UserRole
   passwordHash String?
+  // false = accès révoqué immédiatement (résiliation, compte compromis) :
+  // vérifié en base à chaque requête, pas seulement à l'émission du JWT.
+  active       Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -228,6 +231,30 @@ model InboundSmsJob {
 
   @@index([status, createdAt])
   @@map("inbound_sms_jobs")
+}
+
+// ---------------------------------------------------------------------------
+// OutboundSmsJob (SMS initial différé, persisté — survit aux redéploiements)
+// ---------------------------------------------------------------------------
+// Le webhook voix crée un job avec sendAfter = maintenant + délai client ; le
+// worker draine les jobs échus. Remplace l'ancien setTimeout en mémoire qui
+// perdait le SMS si le process redémarrait pendant le délai. `callId` est
+// unique : un seul SMS initial par appel, même si le webhook rejoue.
+
+model OutboundSmsJob {
+  id           String           @id @default(cuid())
+  clientId     String
+  callId       String           @unique
+  callerNumber String
+  sendAfter    DateTime
+  status       InboundJobStatus @default(pending)
+  attempts     Int              @default(0)
+  lastError    String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@index([status, sendAfter])
+  @@map("outbound_sms_jobs")
 }
 
 // ---------------------------------------------------------------------------

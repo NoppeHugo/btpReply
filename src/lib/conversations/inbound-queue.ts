@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { processInboundSms } from "./inbound";
+import { sendAdminAlert } from "@/lib/alerts/admin";
 import { InboundJobStatus } from "@/generated/prisma/client";
 
 // Nombre max d'échecs avant d'abandonner un job (passage en `failed`).
@@ -107,6 +108,14 @@ export async function runInboundQueue(): Promise<number> {
         data: { status, attempts, lastError: String(err) },
       });
       logger.error({ err, jobId: job.id, attempts, status }, "Job SMS entrant en échec");
+      // Échec définitif = un client final attend une réponse qui ne viendra
+      // pas : prévenir l'équipe au lieu de laisser mourir en silence.
+      if (status === InboundJobStatus.failed) {
+        await sendAdminAlert(
+          "SMS entrant en échec définitif",
+          `Job ${job.id} — de ${job.callerNumber}\n\nMessage : ${job.body}\n\nErreur : ${String(err)}`
+        );
+      }
     }
   }
 

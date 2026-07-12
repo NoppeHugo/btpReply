@@ -25,6 +25,7 @@ const OPTIONAL: Record<string, string> = {
   VAPID_PUBLIC_KEY: "Web Push (clé publique VAPID) — optionnel",
   VAPID_PRIVATE_KEY: "Web Push (clé privée VAPID) — optionnel",
   VAPID_SUBJECT: "Web Push (contact, ex: mailto:contact@rappl.be)",
+  ALERT_ADMIN_EMAIL: "Alertes ops internes (jobs en échec) — optionnel",
 };
 
 export type EnvStatus = {
