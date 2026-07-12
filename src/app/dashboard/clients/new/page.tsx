@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Check, Copy } from "lucide-react";
 
 export default function NewClientPage() {
   const router = useRouter();
@@ -14,6 +15,8 @@ export default function NewClientPage() {
   });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [invite, setInvite] = useState<{ clientId: string; url: string } | null>(null);
+  const [copied, setCopied] = useState(false);
 
   function update(key: keyof typeof form, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -29,15 +32,73 @@ export default function NewClientPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      const data = await res.json();
+      const json = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Erreur inconnue");
+        setError(json.error ?? "Erreur inconnue");
         return;
       }
-      router.push(`/dashboard/clients/${data.client.id}`);
+      const data = json.data ?? json;
+      if (data.inviteUrl) {
+        // Pas de mot de passe fourni : montrer le lien d'invitation à copier.
+        setInvite({ clientId: data.client.id, url: data.inviteUrl });
+      } else {
+        router.push(`/dashboard/clients/${data.client.id}`);
+      }
     } finally {
       setLoading(false);
     }
+  }
+
+  async function copyInvite() {
+    if (!invite) return;
+    await navigator.clipboard.writeText(invite.url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  if (invite) {
+    return (
+      <div className="mx-auto max-w-lg">
+        <h1 className="app-h1 mb-6">Client créé</h1>
+        <div className="app-card space-y-4">
+          <div className="flex items-center gap-2 text-emerald-400">
+            <Check className="size-5" />
+            <p className="font-medium">
+              {form.name} est prêt — envoyez ce lien d&apos;invitation à
+              l&apos;artisan.
+            </p>
+          </div>
+          <p className="text-sm text-white/60">
+            Il choisira son mot de passe puis sera guidé pas à pas (renvoi
+            d&apos;appel, horaires, contacts). Le lien est valable 7 jours et a
+            aussi été envoyé par email à {form.ownerEmail}.
+          </p>
+          <code className="block break-all rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-white/70">
+            {invite.url}
+          </code>
+          <div className="flex gap-3">
+            <button type="button" onClick={copyInvite} className="btn-primary">
+              {copied ? (
+                <>
+                  <Check className="size-4" /> Copié
+                </>
+              ) : (
+                <>
+                  <Copy className="size-4" /> Copier le lien
+                </>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push(`/dashboard/clients/${invite.clientId}`)}
+              className="btn-ghost border border-white/10"
+            >
+              Voir la fiche client
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -86,16 +147,19 @@ export default function NewClientPage() {
             />
           </Field>
 
-          <Field label="Mot de passe provisoire *">
+          <Field label="Mot de passe provisoire (optionnel)">
             <input
               type="password"
-              required
               minLength={8}
               value={form.ownerPassword}
               onChange={(e) => update("ownerPassword", e.target.value)}
-              placeholder="8 caractères minimum"
+              placeholder="Vide = lien d'invitation généré"
               className="app-input w-full"
             />
+            <p className="mt-1 text-[11px] text-white/40">
+              Laissez vide pour générer un lien d&apos;invitation : l&apos;artisan
+              choisit son mot de passe lui-même (recommandé).
+            </p>
           </Field>
         </div>
 

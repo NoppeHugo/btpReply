@@ -22,6 +22,9 @@ const OPTIONAL: Record<string, string> = {
   SMTP_PASS: "Mot de passe SMTP — optionnel",
   SMTP_PORT: "Port SMTP (défaut: 587)",
   FROM_EMAIL: "Adresse expéditeur email (défaut: SMTP_USER)",
+  VAPID_PUBLIC_KEY: "Web Push (clé publique VAPID) — optionnel",
+  VAPID_PRIVATE_KEY: "Web Push (clé privée VAPID) — optionnel",
+  VAPID_SUBJECT: "Web Push (contact, ex: mailto:contact@rappl.be)",
 };
 
 export type EnvStatus = {

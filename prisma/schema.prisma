@@ -85,21 +85,26 @@ model Client {
   initialSmsDelaySec Int       @default(30)
   alertEmail         String?
   alertPhone         String?
+  // Valeur moyenne d'un client final (€) — base du CA estimé sur la page ROI.
+  avgCustomerValue   Int       @default(800)
   // Onboarding artisan terminé (import contacts + install PWA). Null = à faire.
   onboardingCompletedAt DateTime?
+  // Dernière étape du wizard d'onboarding atteinte (reprise où on s'est arrêté).
+  onboardingStep        Int       @default(0)
   createdAt        DateTime    @default(now())
   updatedAt        DateTime    @updatedAt
 
-  users            User[]
-  phoneNumbers     PhoneNumber[]
-  calls            Call[]
-  conversations    Conversation[]
-  leads            Lead[]
-  whitelistEntries WhitelistEntry[]
-  businessHours    BusinessHours[]
-  messageTemplates MessageTemplate[]
-  clientNotes      ClientNote[]
-  clientMessages   ClientMessage[]
+  users             User[]
+  phoneNumbers      PhoneNumber[]
+  calls             Call[]
+  conversations     Conversation[]
+  leads             Lead[]
+  whitelistEntries  WhitelistEntry[]
+  businessHours     BusinessHours[]
+  messageTemplates  MessageTemplate[]
+  clientNotes       ClientNote[]
+  clientMessages    ClientMessage[]
+  pushSubscriptions PushSubscription[]
 
   @@map("clients")
 }
@@ -351,6 +356,25 @@ model ClientNote {
 
   @@index([clientId])
   @@map("client_notes")
+}
+
+// ---------------------------------------------------------------------------
+// PushSubscription (Web Push : notification instantanée des nouveaux leads)
+// ---------------------------------------------------------------------------
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  clientId  String
+  userId    String?
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  client Client @relation(fields: [clientId], references: [id])
+
+  @@index([clientId])
+  @@map("push_subscriptions")
 }
 
 // ---------------------------------------------------------------------------

@@ -208,3 +208,41 @@ export function buildDailyRecapEmail(d: RecapData): {
 
   return { subject, html };
 }
+
+// ── Reset / définition de mot de passe ──────────────────────────────────────
+
+export function buildPasswordResetEmail(p: {
+  resetUrl: string;
+  invite: boolean;
+}): { subject: string; html: string } {
+  const subject = p.invite
+    ? "Bienvenue sur Rappl — définissez votre mot de passe"
+    : "Réinitialisation de votre mot de passe Rappl";
+
+  const intro = p.invite
+    ? "Votre espace Rappl est prêt. Cliquez ci-dessous pour choisir votre mot de passe et démarrer."
+    : "Vous avez demandé à réinitialiser votre mot de passe. Cliquez ci-dessous pour en choisir un nouveau.";
+
+  const validity = p.invite ? "7 jours" : "1 heure";
+
+  const html = `
+<div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:520px;margin:0 auto;padding:24px">
+  <h2 style="margin:0 0 12px;font-size:18px;color:#111">${subject}</h2>
+  <p style="color:#444;font-size:14px;line-height:1.5;margin:0 0 20px">${intro}</p>
+  <p style="margin:0 0 20px">
+    <a href="${p.resetUrl}"
+       style="display:inline-block;background:#f59e0b;color:#111;font-weight:700;text-decoration:none;padding:12px 24px;border-radius:9999px;font-size:14px">
+      ${p.invite ? "Choisir mon mot de passe" : "Réinitialiser mon mot de passe"}
+    </a>
+  </p>
+  <p style="color:#777;font-size:12px;line-height:1.5;margin:0 0 4px">
+    Ce lien est valable ${validity}. Si le bouton ne fonctionne pas, copiez cette adresse :
+  </p>
+  <p style="color:#777;font-size:12px;word-break:break-all;margin:0 0 20px">${p.resetUrl}</p>
+  <p style="color:#999;font-size:12px;margin:0">
+    Si vous n'êtes pas à l'origine de cette demande, ignorez cet email — votre mot de passe reste inchangé.
+  </p>
+</div>`;
+
+  return { subject, html };
+}

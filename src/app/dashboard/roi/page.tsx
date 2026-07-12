@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { dayBoundsInTz, monthBoundsInTz } from "@/lib/time";
 
 const DEFAULT_TZ = "Europe/Brussels";
-const AVG_CUSTOMER_VALUE = 800; // € — configurable assumption
+const DEFAULT_AVG_CUSTOMER_VALUE = 800; // € — fallback (vue admin globale)
 
 export default async function RoiPage() {
   const session = await auth();
@@ -12,6 +12,16 @@ export default async function RoiPage() {
 
   const clientId =
     session.user.role === "admin" ? undefined : session.user.clientId;
+
+  // Valeur moyenne d'un client : configurable par l'artisan (page Config).
+  let avgCustomerValue = DEFAULT_AVG_CUSTOMER_VALUE;
+  if (clientId) {
+    const client = await db.client.findUnique({
+      where: { id: clientId },
+      select: { avgCustomerValue: true },
+    });
+    if (client) avgCustomerValue = client.avgCustomerValue;
+  }
 
   const now = new Date();
   const { start: dayStart, end: dayEnd } = dayBoundsInTz(DEFAULT_TZ, now);
@@ -44,7 +54,7 @@ export default async function RoiPage() {
 
   const conversionRate =
     leadsTotal > 0 ? Math.round((leadsDone / leadsTotal) * 100) : 0;
-  const estimatedRevenue = leadsDone * AVG_CUSTOMER_VALUE;
+  const estimatedRevenue = leadsDone * avgCustomerValue;
 
   const stats = [
     {
@@ -68,7 +78,7 @@ export default async function RoiPage() {
     {
       label: "Chiffre d'affaires estimé",
       value: `${estimatedRevenue.toLocaleString("fr-BE")} €`,
-      sub: `Basé sur ${AVG_CUSTOMER_VALUE} € / client`,
+      sub: `Basé sur ${avgCustomerValue} € / client`,
       color: "text-amber-400",
     },
     {
@@ -95,8 +105,8 @@ export default async function RoiPage() {
 
       <p className="mt-6 text-xs text-white/30">
         * Les estimations de chiffre d&apos;affaires sont basées sur une valeur
-        moyenne de {AVG_CUSTOMER_VALUE} € par client. Cette valeur peut être
-        ajustée selon votre secteur.
+        moyenne de {avgCustomerValue} € par client — ajustable dans Config →
+        Paramètres.
       </p>
     </div>
   );

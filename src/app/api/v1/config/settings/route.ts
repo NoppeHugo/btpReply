@@ -12,6 +12,8 @@ const putSchema = z.object({
     .regex(/^\+\d{8,15}$/, "Format E.164 requis (+32...)")
     .nullable()
     .or(z.literal("")),
+  // Valeur moyenne d'un client (€) — base du CA estimé (page ROI).
+  avgCustomerValue: z.number().int().min(0).max(100000).optional(),
 });
 
 // GET /api/v1/config/settings
@@ -22,7 +24,12 @@ export async function GET(req: NextRequest) {
 
   const client = await db.client.findUnique({
     where: { id: user.clientId },
-    select: { initialSmsDelaySec: true, alertEmail: true, alertPhone: true },
+    select: {
+      initialSmsDelaySec: true,
+      alertEmail: true,
+      alertPhone: true,
+      avgCustomerValue: true,
+    },
   });
   if (!client) return HTTP.notFound();
 
@@ -44,8 +51,16 @@ export async function PUT(req: NextRequest) {
       initialSmsDelaySec: parsed.data.initialSmsDelaySec,
       alertEmail: parsed.data.alertEmail || null,
       alertPhone: parsed.data.alertPhone || null,
+      ...(parsed.data.avgCustomerValue !== undefined
+        ? { avgCustomerValue: parsed.data.avgCustomerValue }
+        : {}),
     },
-    select: { initialSmsDelaySec: true, alertEmail: true, alertPhone: true },
+    select: {
+      initialSmsDelaySec: true,
+      alertEmail: true,
+      alertPhone: true,
+      avgCustomerValue: true,
+    },
   });
 
   return ok(updated);

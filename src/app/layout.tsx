@@ -30,6 +30,10 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#0a0a0a",
+  width: "device-width",
+  initialScale: 1,
+  // Nécessaire pour que env(safe-area-inset-*) soit non nul en PWA iOS.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

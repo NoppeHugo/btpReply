@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Check } from "lucide-react";
 
 // Whitelist « passive » : l'artisan marque un numéro connu depuis la liste des
 // appels. Le numéro n'enverra plus de SMS auto (POST vers l'endpoint whitelist
@@ -27,8 +28,11 @@ export function KnownNumberButton({ number }: { number: string }) {
 
   if (state === "done") {
     return (
-      <span className="text-xs text-emerald-400" title="Numéro exclu des SMS automatiques">
-        ✓ Connu
+      <span
+        className="inline-flex items-center gap-1 text-xs text-emerald-400"
+        title="Numéro exclu des SMS automatiques"
+      >
+        <Check className="size-3" /> Connu
       </span>
     );
   }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { Check } from "lucide-react";
 
 type Note = {
   id: string;
@@ -154,7 +155,13 @@ export default function ClientJournal({
             disabled={sendingMsg || !msgBody.trim()}
             className="btn-primary self-start"
           >
-            {msgSent ? "Envoyé ✓" : "Envoyer"}
+            {msgSent ? (
+              <>
+                <Check className="size-4" /> Envoyé
+              </>
+            ) : (
+              "Envoyer"
+            )}
           </button>
         </div>
       </section>

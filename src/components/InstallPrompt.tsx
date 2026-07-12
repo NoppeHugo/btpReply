@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { X } from "lucide-react";
 
 // Invite à installer la PWA.
 //  - Android/Chrome : capte beforeinstallprompt → bouton « Installer ».
@@ -14,7 +15,8 @@ interface BeforeInstallPromptEvent extends Event {
 
 // État navigateur externe lu via useSyncExternalStore (pas de setState en effet,
 // et snapshot serveur stable → pas de mismatch d'hydratation).
-function useStandalone(): boolean {
+// Exportés : réutilisés par le wizard d'onboarding.
+export function useStandalone(): boolean {
   return useSyncExternalStore(
     (cb) => {
       const mq = window.matchMedia("(display-mode: standalone)");
@@ -28,7 +30,7 @@ function useStandalone(): boolean {
   );
 }
 
-function useIsIOS(): boolean {
+export function useIsIOS(): boolean {
   return useSyncExternalStore(
     () => () => {},
     () => /iphone|ipad|ipod/i.test(navigator.userAgent),
@@ -81,10 +83,10 @@ export function InstallPrompt() {
         <button
           type="button"
           onClick={() => setClosed(true)}
-          className="text-white/40 hover:text-white/70"
+          className="rounded-md p-1 text-white/40 hover:text-white/70"
           aria-label="Fermer"
         >
-          ✕
+          <X className="size-4" />
         </button>
       </div>
       {deferred && (
