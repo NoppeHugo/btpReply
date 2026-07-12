@@ -5,6 +5,7 @@ import { validateEnv } from "../src/lib/env";
 import { runDailyRecap } from "./jobs/dailyRecap";
 import { runRgpdPurge } from "./jobs/rgpdPurge";
 import { runInboundQueue } from "../src/lib/conversations/inbound-queue";
+import { runOutboundQueue } from "../src/lib/sms/outbound-queue";
 import { sweepAbandonedConversations } from "../src/lib/conversations/stale";
 
 // Sentry — initialiser avant tout le reste
@@ -65,6 +66,22 @@ cron.schedule("*/5 * * * * *", async () => {
     Sentry.captureException(err);
   } finally {
     inboundQueueRunning = false;
+  }
+});
+
+// File des SMS initiaux différés — drainée toutes les 5 s. Le webhook voix
+// crée un job (sendAfter = appel + délai client) ; l'envoi effectif se fait ici,
+// persisté : un redéploiement pendant le délai ne perd plus le SMS.
+let outboundQueueRunning = false;
+cron.schedule("*/5 * * * * *", async () => {
+  if (outboundQueueRunning) return;
+  outboundQueueRunning = true;
+  try {
+    await runOutboundQueue();
+  } catch (err) {
+    Sentry.captureException(err);
+  } finally {
+    outboundQueueRunning = false;
   }
 });
 

@@ -345,7 +345,10 @@ function ForwardingStep({
   onBack: () => void;
 }) {
   const [copied, setCopied] = useState<"number" | "code" | null>(null);
-  const ussd = phoneNumber ? `**61*${phoneNumber.replace("+", "+")}#` : null;
+  // **004* active les TROIS renvois conditionnels d'un coup (pas de réponse,
+  // occupé, injoignable) — **61* seul laisse passer les appels quand l'artisan
+  // est déjà en ligne ou hors réseau (cave, chantier).
+  const ussd = phoneNumber ? `**004*${phoneNumber}#` : null;
 
   async function copy(text: string, what: "number" | "code") {
     await navigator.clipboard.writeText(text);
@@ -396,8 +399,9 @@ function ForwardingStep({
             </p>
             <p className="mb-3 text-xs text-white/50">
               Ouvrez votre clavier téléphonique, collez ce code et appuyez sur
-              Appeler. Le renvoi « si pas de réponse » est activé immédiatement,
-              chez tous les opérateurs.
+              Appeler. Le renvoi est activé immédiatement pour les trois cas —
+              pas de réponse, ligne occupée, hors réseau — chez tous les
+              opérateurs.
             </p>
             <div className="flex items-center justify-between gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5">
               <code className="font-mono text-base font-semibold text-amber-300">
@@ -437,7 +441,9 @@ function ForwardingStep({
                 réponse → entrez {phoneNumber}
               </p>
               <p className="text-xs text-white/40">
-                Pour désactiver plus tard : composez ##61#
+                Via les réglages, activez aussi « Si occupé » et « Si
+                injoignable » vers le même numéro. Pour tout désactiver plus
+                tard : composez ##004#
               </p>
             </div>
           </details>

@@ -1,5 +1,7 @@
+import crypto from "crypto";
 import { NextRequest } from "next/server";
 import { auth } from "@/auth";
+import { db } from "@/lib/db";
 
 export interface AuthedUser {
   userId: string;
@@ -18,7 +20,11 @@ export function extractBearerToken(req: NextRequest): string | null {
 export function isValidToken(token: string): boolean {
   const secret = process.env.API_SECRET_KEY;
   if (!secret) return false;
-  return token === secret;
+  // Comparaison constant-time : une égalité === laisse fuiter la longueur du
+  // préfixe correct via le temps de réponse.
+  const given = Buffer.from(token);
+  const want = Buffer.from(secret);
+  return given.length === want.length && crypto.timingSafeEqual(given, want);
 }
 
 // ── Auth unifiée : session cookie OU bearer token ─────────────────────────
@@ -35,6 +41,15 @@ export async function getAuthedUser(req: NextRequest): Promise<AuthedUser | null
 
   const session = await auth();
   if (session?.user?.id) {
+    // Le JWT vit jusqu'à expiration : re-vérifier en base que le compte est
+    // toujours actif permet de révoquer un accès immédiatement (résiliation,
+    // compte compromis).
+    const user = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { active: true },
+    });
+    if (!user?.active) return null;
+
     return {
       userId: session.user.id,
       clientId: session.user.clientId,

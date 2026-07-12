@@ -45,7 +45,7 @@
 - [ ] Configurer le renvoi conditionnel sur le téléphone du client artisan :
   - **Sur iPhone (Belgique)** : Paramètres → Téléphone → Renvoi d'appel conditionnel → activer "Si pas de réponse" → entrer le numéro Twilio `+32…`
   - **Sur Android** : Téléphone → ⋮ → Paramètres → Comptes SIM → Renvoi d'appel → Si pas de réponse → numéro Twilio
-  - **Via opérateur (pro)** : taper `**61*+32XXXXXXXX#` sur le clavier (USSD code universel)
+  - **Via opérateur (pro)** : taper `**004*+32XXXXXXXX#` sur le clavier (USSD universel — active les renvois « pas de réponse », « occupé » et « injoignable » d'un coup ; `##004#` pour tout désactiver)
 
 ---
 

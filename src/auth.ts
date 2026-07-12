@@ -3,6 +3,11 @@ import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 import { db } from "@/lib/db";
 import { authConfig } from "@/auth.config";
+import { rateLimit, resetRateLimit } from "@/lib/rate-limit";
+
+// Force brute : 10 tentatives ratées max par email sur 15 minutes.
+const LOGIN_MAX_FAILURES = 10;
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -16,6 +21,12 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
+        const email = (credentials.email as string).toLowerCase();
+        const throttleKey = `login:${email}`;
+        if (!rateLimit(throttleKey, LOGIN_MAX_FAILURES, LOGIN_WINDOW_MS)) {
+          return null;
+        }
+
         const user = await db.user.findUnique({
           where: { email: credentials.email as string },
           select: {
@@ -24,13 +35,17 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             role: true,
             clientId: true,
             passwordHash: true,
+            active: true,
           },
         });
 
-        if (!user?.passwordHash) return null;
+        if (!user?.passwordHash || !user.active) return null;
 
         const valid = await compare(credentials.password as string, user.passwordHash);
         if (!valid) return null;
+
+        // Login réussi : on ne pénalise pas les connexions légitimes suivantes.
+        resetRateLimit(throttleKey);
 
         return {
           id: user.id,

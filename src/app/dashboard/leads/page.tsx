@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useTransition, useCallback } from "react";
-import { MapPin, Clock } from "lucide-react";
+import { MapPin, Clock, Download, ChevronDown } from "lucide-react";
 
 type Lead = {
   id: string;
@@ -18,6 +18,8 @@ type Lead = {
 };
 
 type LeadData = { leads: Lead[]; total: number };
+
+const PAGE_SIZE = 50;
 
 const STATUS_OPTIONS = [
   { value: "", label: "Tous" },
@@ -44,16 +46,29 @@ export default function LeadsPage() {
   const [isPending, startTransition] = useTransition();
 
   // L'API enveloppe ses réponses dans { ok, data } : on désenveloppe ici.
-  const load = useCallback(() => {
-    startTransition(async () => {
-      const qs = filter ? `?status=${filter}` : "";
-      const res = await fetch(`/api/v1/leads${qs}`);
-      if (res.ok) {
-        const json = await res.json();
-        setData((json?.data ?? json) as LeadData);
-      }
-    });
-  }, [filter]);
+  // offset > 0 = pagination incrémentale (« Charger plus ») : la page est
+  // ajoutée à la liste ; offset 0 repart de zéro (filtre, mise à jour statut).
+  const load = useCallback(
+    (offset = 0) => {
+      startTransition(async () => {
+        const params = new URLSearchParams();
+        if (filter) params.set("status", filter);
+        params.set("limit", String(PAGE_SIZE));
+        params.set("offset", String(offset));
+        const res = await fetch(`/api/v1/leads?${params}`);
+        if (res.ok) {
+          const json = await res.json();
+          const page = (json?.data ?? json) as LeadData;
+          setData((prev) =>
+            offset > 0 && prev
+              ? { total: page.total, leads: [...prev.leads, ...page.leads] }
+              : page
+          );
+        }
+      });
+    },
+    [filter]
+  );
 
   useEffect(() => {
     load();
@@ -71,7 +86,16 @@ export default function LeadsPage() {
   return (
     <div>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="app-h1">Leads</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="app-h1">Leads</h1>
+          <a
+            href={`/api/v1/leads/export${filter ? `?status=${filter}` : ""}`}
+            className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs text-white/60 transition-colors hover:bg-white/[0.06] hover:text-white"
+            title="Exporter en CSV (filtre actif inclus)"
+          >
+            <Download className="size-3.5" /> CSV
+          </a>
+        </div>
         <div className="flex flex-wrap gap-2">
           {STATUS_OPTIONS.map((opt) => (
             <button
@@ -162,6 +186,16 @@ export default function LeadsPage() {
               </div>
             </div>
           ))}
+          {data.leads.length < data.total && (
+            <button
+              onClick={() => load(data.leads.length)}
+              disabled={isPending}
+              className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] py-2.5 text-sm text-white/60 transition-colors hover:bg-white/[0.06] hover:text-white disabled:opacity-50"
+            >
+              <ChevronDown className="size-4" />
+              Charger plus ({data.leads.length} / {data.total})
+            </button>
+          )}
           <p className="text-right text-xs text-white/30">
             {data.total} lead{data.total !== 1 ? "s" : ""} au total
           </p>

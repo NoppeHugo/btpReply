@@ -25,6 +25,13 @@ services:
       # Forcer l'hôte de la DB sur le service `db` (le .env peut contenir une autre valeur)
       DATABASE_URL: postgresql://${POSTGRES_USER:-btpreply}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-btpreply}
       ANTHROPIC_MODEL_QUALIFICATION: ${ANTHROPIC_MODEL_QUALIFICATION:-claude-haiku-4-5}
+    healthcheck:
+      # node est toujours présent dans l'image ; curl/wget pas garantis.
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     depends_on:
       db:
         condition: service_healthy
@@ -46,7 +53,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.worker
-    command: pnpm exec prisma migrate deploy
+    # Le repo n'a pas de dossier prisma/migrations : `migrate deploy` ne faisait
+    # rien et le schéma prod dérivait du code. `db push` synchronise directement
+    # depuis schema.prisma (idempotent). Si on adopte de vraies migrations un
+    # jour : baseliner d'abord, puis revenir à `migrate deploy`.
+    command: pnpm exec prisma db push --skip-generate
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-btpreply}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-btpreply}
     depends_on:

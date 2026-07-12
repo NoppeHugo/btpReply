@@ -20,9 +20,22 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
+            set -e
             cd /opt/btpreply
             git pull origin main
             docker compose build app worker migrate
             docker compose run --rm migrate
             docker compose up -d --no-deps app worker caddy
             docker image prune -f
+            # Vérifier que l'app répond avant de déclarer le déploiement réussi
+            for i in $(seq 1 12); do
+              if docker compose exec -T app node -e "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"; then
+                echo "Health check OK"
+                exit 0
+              fi
+              echo "En attente de l'app ($i/12)…"
+              sleep 5
+            done
+            echo "ÉCHEC : l'app ne répond pas après déploiement" >&2
+            docker compose logs --tail 50 app >&2
+            exit 1

@@ -2,8 +2,9 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
-import { ok, HTTP } from "@/lib/api/response";
+import { ok, HTTP, err } from "@/lib/api/response";
 import { peekResetToken, verifyResetToken } from "@/lib/auth/reset-token";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 
 const schema = z.object({
@@ -16,6 +17,10 @@ const schema = z.object({
 export async function POST(req: NextRequest) {
   const parsed = schema.safeParse(await req.json());
   if (!parsed.success) return HTTP.badRequest(parsed.error.issues[0]?.message);
+
+  if (!rateLimit(`reset:ip:${clientIp(req.headers)}`, 10, 60 * 60 * 1000)) {
+    return err("Trop de demandes — réessayez plus tard", 429, "RATE_LIMITED");
+  }
 
   const userId = peekResetToken(parsed.data.token);
   if (!userId) return HTTP.badRequest("Lien invalide ou expiré");
